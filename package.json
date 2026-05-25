@@ -1,0 +1,60 @@
+{
+  "name": "@grunt-it/fiscalize",
+  "version": "0.1.0",
+  "description": "Open-source Slovenian fiscalization + e-invoicing toolkit (TS/Effect). P1: EN16931 → e-SLOG 2.0 / UBL e-invoice generation + validation, deriving from E-Invoice-EU. Framework-agnostic engine.",
+  "type": "module",
+  "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./eslog": "./src/lib/eslog/index.ts",
+    "./einvoice": "./src/lib/einvoice/index.ts",
+    "./invoice": "./src/lib/invoice/index.ts",
+    "./foundation": "./src/lib/foundation/index.ts"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "ROADMAP.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grunt-it/fiscalize.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "e-invoice",
+    "einvoicing",
+    "e-slog",
+    "eslog",
+    "en16931",
+    "ubl",
+    "peppol",
+    "fiscalization",
+    "furs",
+    "slovenia",
+    "effect",
+    "typescript"
+  ],
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@e-invoice-eu/core": "^3.1.1",
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1",
+    "effect": "^3.18.4",
+    "valibot": "^1.2.0",
+    "xmlbuilder2": "^4.0.3"
+  }
+}

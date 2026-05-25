@@ -1,0 +1,33 @@
+# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+*.log
+
+# dotenv
+.env
+.env.local
+
+# caches
+.cache
+*.tsbuildinfo
+
+# IDEs
+.idea
+.vscode
+
+# macOS
+.DS_Store
+
+# Bun config with tokens
+bunfig.toml
