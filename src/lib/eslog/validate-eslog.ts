@@ -1,13 +1,12 @@
-/// <reference path="../../types.d.ts" />
-// The reference above carries the `declare module "*.xsd"` ambient into any
-// consumer's compilation that loads this file (the engine ships TS source, so a
-// consumer's tsc resolves these .xsd text-imports). Keeps consumers from having
-// to re-declare the ambient themselves.
 import { Effect } from "effect";
 import { validateXML } from "xmllint-wasm";
 import { EInvoiceGenerationError, EslogValidationError, type ValidationIssue } from "../foundation/errors";
-import invoiceXsd from "./schema/eSLOG20_INVOIC_v200.xsd" with { type: "text" };
-import xmldsigXsd from "./schema/xmldsig-core-schema.xsd" with { type: "text" };
+// XSDs are inlined as JS strings (generated from the vendored .xsd by
+// scripts/gen-xsd-modules.ts) so they load under ANY bundler/runtime
+// (Vite/Rollup/Workers/bun) — not just bun's `import … with { type: "text" }`,
+// which Rollup/Vite reject when bundling for a consumer.
+import invoiceXsd from "./schema/eslog-invoice-xsd";
+import xmldsigXsd from "./schema/xmldsig-xsd";
 
 /**
  * Validate an e-SLOG XML string against the **official e-SLOG 2.0 XSD**
