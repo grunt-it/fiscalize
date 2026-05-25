@@ -1,4 +1,9 @@
-import { type Invoice as EInvoiceEUInvoice, InvoiceService } from "@e-invoice-eu/core";
+// Type-only import (erased at runtime). The VALUE (`InvoiceService`) is loaded
+// lazily in getService() so merely importing the engine does NOT pull
+// @e-invoice-eu/core — it's Node-only (crashes at module-init under Cloudflare
+// Workers via tmp-promise → fs.realpathSync). UBL/CII therefore throw only if
+// *called* on a non-Node runtime, not on import. See docs/RUNTIME-COMPAT.md.
+import type { Invoice as EInvoiceEUInvoice, InvoiceService as InvoiceServiceType } from "@e-invoice-eu/core";
 import { Effect } from "effect";
 import { EInvoiceGenerationError, UnsupportedFormatError } from "../foundation/errors";
 import type { EslogOptions } from "../eslog/serialize";
@@ -23,10 +28,14 @@ export interface GenerateOptions extends EslogOptions {
   validateOutput?: boolean;
 }
 
-// `InvoiceService` is stateless across calls; build once.
-let service: InvoiceService | undefined;
-function getService(): InvoiceService {
-  if (!service) service = new InvoiceService(console);
+// `InvoiceService` is stateless across calls; build once. Loaded lazily via
+// dynamic import so the engine stays importable on non-Node runtimes.
+let service: InvoiceServiceType | undefined;
+async function getService(): Promise<InvoiceServiceType> {
+  if (!service) {
+    const { InvoiceService } = await import("@e-invoice-eu/core");
+    service = new InvoiceService(console);
+  }
   return service;
 }
 
@@ -59,7 +68,8 @@ export const generateEInvoice = Effect.fn("generateEInvoice")(function* (
 
   const internal = toEInvoiceInternal(invoice) as unknown as EInvoiceEUInvoice;
   const rendered = yield* Effect.tryPromise({
-    try: () => getService().generate(internal, { format: LIB_FORMAT[format], lang: options.lang ?? "sl" }),
+    try: async () =>
+      (await getService()).generate(internal, { format: LIB_FORMAT[format], lang: options.lang ?? "sl" }),
     catch: (cause) => new EInvoiceGenerationError(format, cause),
   });
 
