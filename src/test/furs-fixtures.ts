@@ -6,6 +6,8 @@ export interface TestCert {
   passphrase: string;
   privateKeyPem: string;
   publicKeyPem: string;
+  /** Self-signed certificate PEM (e.g. to stand in for FURS's response cert). */
+  certPem: string;
   serialDecimal: string;
 }
 
@@ -40,6 +42,7 @@ export function makeTestCert(): TestCert {
     passphrase,
     privateKeyPem: forge.pki.privateKeyToPem(keys.privateKey),
     publicKeyPem: forge.pki.publicKeyToPem(keys.publicKey),
+    certPem: forge.pki.certificateToPem(cert),
     serialDecimal: BigInt("0x0a1b2c3d4e5f6071").toString(10),
   };
 }

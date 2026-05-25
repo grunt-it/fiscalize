@@ -57,9 +57,14 @@ JSON/JWS FURS protocol; cross-checked against `node-furs-fiscal-verification`,
   serial emitted as an exact integer literal).
 - **Messages** — `InvoiceRequest` + immovable `BusinessPremiseRequest`; client
   `echo` / `registerBusinessPremise` / `reportInvoice` (→ ZOI + EOR + printable).
+- **Response authentication** — `verifyFursResponse` verifies FURS's response JWS
+  (RS256) against FURS's public certificate before the EOR is trusted; the client
+  enforces it when `fursResponseCertPem` is set (raises `FursResponseSignatureError`
+  on a spoofed/tampered response). The engine is now safe for real use.
 
-Unit-verified (ZOI cross-validated vs independent `node:crypto`; JWS signature
-verifies; loads the real FURS demo test cert).
+Unit-verified (ZOI cross-validated vs independent `node:crypto`; request JWS
+signature verifies; response verification accepts genuine + rejects
+spoofed/tampered/wrong-key responses; loads the real FURS demo test cert).
 
 ### Deferred / blocked
 
@@ -68,8 +73,6 @@ verifies; loads the real FURS demo test cert).
   legacy FURS test endpoint rejects modern-OpenSSL TLS from a proxied network.
   Run the opt-in `furs-live.test.ts` under a **Node** runtime on an unproxied
   network (with a FURS test p12) to confirm end-to-end — see the test's header.
-- **Verify FURS's response JWS signature** against the FURS public cert (the
-  reference clients skip this; currently decoded without verification).
 - **Refunds / corrective receipts**, movable premises (A/B/C), sales-book mode.
 
 ## P3 — integration surface

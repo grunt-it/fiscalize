@@ -1,4 +1,4 @@
-import { createSign } from "node:crypto";
+import { createSign, createVerify, X509Certificate } from "node:crypto";
 
 export interface JwsIdentity {
   subjectName: string;
@@ -33,14 +33,43 @@ export function signFursJws(payload: unknown, privateKeyPem: string, id: JwsIden
 }
 
 /**
- * Decode a compact JWS payload without verifying the signature. The reference
- * FURS clients do not verify FURS's response signature; verifying it against the
- * FURS public cert is a hardening follow-up (see ROADMAP).
+ * Decode a compact JWS payload **without** verifying the signature. Use
+ * {@link verifyFursResponse} when you have FURS's public certificate — an
+ * unverified response (and its EOR) must not be trusted in production.
  */
 export function decodeJwsPayload<T = unknown>(token: string): T {
   const segment = token.split(".")[1];
   if (!segment) throw new Error("malformed JWS: missing payload segment");
   return JSON.parse(Buffer.from(segment, "base64url").toString("utf8")) as T;
+}
+
+/**
+ * Verify a FURS response's compact JWS (RS256) against FURS's public
+ * certificate and return its decoded payload. Confirms the response was signed
+ * by FURS (not spoofed / tampered).
+ *
+ * `fursCertPem` is FURS's response-signing certificate (PEM) — the test-env one
+ * is published with the FURS reference clients; production has its own. Throws
+ * if the token is malformed or the signature does not verify.
+ */
+export function verifyFursResponse<T = unknown>(token: string, fursCertPem: string): T {
+  const [headerB64, payloadB64, signatureB64] = token.split(".");
+  if (!headerB64 || !payloadB64 || !signatureB64) {
+    throw new Error("malformed JWS: expected three segments");
+  }
+
+  const header = JSON.parse(Buffer.from(headerB64, "base64url").toString("utf8")) as { alg?: string };
+  if (header.alg !== "RS256") {
+    throw new Error(`unexpected JWS alg "${header.alg}" (expected RS256)`);
+  }
+
+  const publicKey = new X509Certificate(fursCertPem).publicKey;
+  const verified = createVerify("RSA-SHA256")
+    .update(`${headerB64}.${payloadB64}`, "utf8")
+    .verify(publicKey, signatureB64, "base64url");
+  if (!verified) throw new Error("signature did not verify against the FURS certificate");
+
+  return JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf8")) as T;
 }
 
 function b64url(s: string): string {

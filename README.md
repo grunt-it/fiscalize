@@ -149,6 +149,11 @@ const program = Effect.gen(function* () {
 shop's eDavki cert in production). ZOI is `MD5(RSA-SHA256/PKCS#1 v1.5(…))`;
 messages are RS256 JWS over mutual TLS.
 
+Pass `fursResponseCertPem` (FURS's response-signing cert) to authenticate FURS's
+replies — the client then verifies each response's JWS signature before trusting
+the EOR (raising `FursResponseSignatureError` on a spoofed/tampered response).
+Strongly recommended for production.
+
 > **Runtime note:** outbound mutual-TLS client certs do **not** work under bun
 > 1.3.6 — run the FURS client under **Node** until bun supports them. The logic
 > is unit-verified; the live FURS-test round-trip is the one deferred step
