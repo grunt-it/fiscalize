@@ -14,6 +14,9 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      # Lets `bun install` resolve @grunt-it packages from GitHub Packages via bunfig.toml.
+      REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,6 +43,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      REGISTRY_TOKEN: ${{ secrets.REGISTRY_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -15,5 +15,5 @@ fixture) at `src/test/sample-eslog20-with-bt.xml`, and the 1.6↔2.0 mapping
 tables ship in the package as `.xlsx` (not vendored here).
 
 e-SLOG is an open standard for Slovenian electronic business documents; these
-schema files are redistributed for interoperability. They are not covered by
-this project's MIT license — refer to ePOS/GZS for their terms.
+schema files are bundled for interoperability and keep their own terms — refer
+to ePOS/GZS. They are not part of this project's own (UNLICENSED, internal) code.
