@@ -1,3 +1,8 @@
+/// <reference path="../../types.d.ts" />
+// The reference above carries the `declare module "*.xsd"` ambient into any
+// consumer's compilation that loads this file (the engine ships TS source, so a
+// consumer's tsc resolves these .xsd text-imports). Keeps consumers from having
+// to re-declare the ambient themselves.
 import { Effect } from "effect";
 import { validateXML } from "xmllint-wasm";
 import { EInvoiceGenerationError, EslogValidationError, type ValidationIssue } from "../foundation/errors";
