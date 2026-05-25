@@ -9,10 +9,11 @@ It knows nothing about Medusa, HTTP frameworks, or any host: build an invoice,
 get conformant XML out. Consumers (e.g. a Medusa fiscalization plugin) wrap it as
 a leaf dependency.
 
-> **Status — P1.** This release covers the **e-invoice core**: generate +
-> validate an EN16931 core invoice as **e-SLOG 2.0** (Slovenian) and **UBL / CII**.
-> FURS fiscal verification (ZOI/EOR), Medusa integration, and the service/MCP
-> surface are later phases — see [`ROADMAP.md`](./ROADMAP.md).
+> **Status — P1 + P2.** Covers the **e-invoice core** (generate + validate an
+> EN16931 core invoice as **e-SLOG 2.0** / **UBL** / **CII**, with official-XSD
+> validation) and **FURS fiscal verification** (ZOI/EOR — unit-verified; live
+> test-env round-trip deferred, see below). Medusa integration and the
+> service/MCP surface are later phases — see [`ROADMAP.md`](./ROADMAP.md).
 
 ## Why this shape
 
@@ -119,6 +120,39 @@ yield* validateEslogXml(someEslogXml);
 `validateEslogXml` checks the XML against the **official e-SLOG 2.0 XSD**
 (`eSLOG20_INVOIC_v200.xsd` + `xmldsig-core-schema.xsd`, from the epos.si Aug-2020
 package), using xmllint compiled to WebAssembly — no native bindings.
+
+## FURS fiscal verification (P2)
+
+For Slovenian cash-register fiscalization (distinct from the e-invoice document):
+compute the **ZOI** and obtain the **EOR** from FURS.
+
+```ts
+import { Effect } from "effect";
+import { makeFursClient } from "@grunt-it/fiscalize/furs";
+
+const program = Effect.gen(function* () {
+  const furs = yield* makeFursClient({ p12, passphrase, production: false });
+  const { zoi, eor, printable } = yield* furs.reportInvoice({
+    taxNumber: 10489185,
+    issueDateTime: new Date(),
+    invoiceNumber: "11",
+    businessPremiseId: "BP101",
+    electronicDeviceId: "0001",
+    invoiceAmount: 19.15,
+    vat: [{ taxRate: 22, taxableAmount: 15.7, taxAmount: 3.45 }],
+  });
+  return { zoi, eor, printable }; // ZOI + FURS EOR + the QR/PDF417 string
+});
+```
+
+`p12` is the taxpayer's certificate (a FURS test cert for the test env; the
+shop's eDavki cert in production). ZOI is `MD5(RSA-SHA256/PKCS#1 v1.5(…))`;
+messages are RS256 JWS over mutual TLS.
+
+> **Runtime note:** outbound mutual-TLS client certs do **not** work under bun
+> 1.3.6 — run the FURS client under **Node** until bun supports them. The logic
+> is unit-verified; the live FURS-test round-trip is the one deferred step
+> (see [`ROADMAP.md`](./ROADMAP.md)).
 
 ## The model
 

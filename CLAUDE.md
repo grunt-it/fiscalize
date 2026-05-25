@@ -35,7 +35,21 @@ wrap it as a leaf dependency. Do not couple it to any framework.
 - `src/lib/einvoice/` — bridge to `@e-invoice-eu/core`: maps the domain model →
   the lib's UBL-shaped internal JSON (`ubl:Invoice` / `cbc:`/`cac:`) → UBL / CII
   output, plus EN16931 validation via the lib's `invoiceSchema`.
+- `src/lib/furs/` (P2) — FURS fiscal verification (ZOI/EOR), the JSON/JWS
+  protocol. `cert` (p12 load), `zoi` (`MD5(RSA-SHA256/PKCS#1 v1.5(…))`), `jws`
+  (RS256 + FURS header), `messages`, `client` (mutual-TLS). Cert serial is kept
+  as a BigInt string (real serials exceed 2^53) and emitted as an exact integer
+  literal in the JWS header.
 - `src/lib/foundation/` — minimal Effect house helpers (tagged errors, runSafe).
+
+### Runtime requirement: FURS needs Node-mTLS, not bun-in-sandbox
+
+The FURS client uses **outbound mutual-TLS client certs**, which **bun 1.3.6 does
+not support** (fetch `tls.cert/key` and `node:https` cert/key both fail with
+ECONNRESET; `node:https` rejects `pfx`). Run FURS calls under a **Node** runtime
+on a non-proxied network. The non-FURS code (e-invoice/e-SLOG) runs fine under
+bun. This is a real deployment constraint for the eventual service / Medusa
+plugin — don't schedule FURS calls on bun-in-sandbox.
 
 ### Derive, don't fork
 

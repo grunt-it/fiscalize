@@ -10,6 +10,7 @@
     "./eslog": "./src/lib/eslog/index.ts",
     "./einvoice": "./src/lib/einvoice/index.ts",
     "./invoice": "./src/lib/invoice/index.ts",
+    "./furs": "./src/lib/furs/index.ts",
     "./foundation": "./src/lib/foundation/index.ts"
   },
   "files": [
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node-forge": "^1.3.14",
     "typescript": "^5"
   },
   "dependencies": {
@@ -54,6 +56,7 @@
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",
     "effect": "^3.18.4",
+    "node-forge": "^1.4.0",
     "valibot": "^1.2.0",
     "xmlbuilder2": "^4.0.3",
     "xmllint-wasm": "^5.2.0"
