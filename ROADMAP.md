@@ -14,12 +14,23 @@ EN16931 core invoice → **e-SLOG 2.0** + **UBL / CII**, with validation.
 - EN16931 structural validation via the lib's JSON Schema (Ajv 2019-09).
 - Effect-native API + Promise boundary (`createEInvoice`).
 
+## P1.x — e-SLOG XSD output validation ✅
+
+- `validateEslogXml(xml)` validates produced e-SLOG XML against the **official
+  e-SLOG 2.0 XSD** (`eSLOG20_INVOIC_v200.xsd` + its `xmldsig-core-schema.xsd`
+  import), vendored from the epos.si Aug-2020 package, via xmllint compiled to
+  WebAssembly (`xmllint-wasm` — no native bindings, bun-friendly).
+- `generateEInvoice(..., { validateOutput: true })` validates before returning.
+- Confirms the P1 serializer is **XSD-conformant** (regression-locked in tests
+  against both our output and the official sample invoice).
+
 ### Deferred within the e-invoice core (next P1.x slices)
 
-- **e-SLOG XSD + schematron validation** of *output*. P1 validates the EN16931
-  model structurally (UBL schema); it does not yet validate the produced e-SLOG
-  XML against the official e-SLOG 2.0 XSD or business-rule schematron. Vendor the
-  XSD (incl. `xmldsig-core-schema.xsd`) and add an output-validation pass.
+- **Business-rule (schematron-equivalent) validation.** The official e-SLOG 2.0
+  package ships **no `.sch`** — the business rules (arithmetic, conditional
+  presence) live in the spec PDFs as prose. The XSD enforces structure/types,
+  not those rules. A future slice can encode the key rules (BR-CO/BR-S analogues)
+  as checks. Cross-check against the lib's EN16931 schematron where it overlaps.
 - **Document-level allowances/charges** (BG-20/BG-21) → e-SLOG `G_SG16`, UBL
   `cac:AllowanceCharge`. Model has the totals (BT-107/108) but not the detail.
 - **Line-level allowances** (BG-27/BG-28) → e-SLOG `G_SG39`.

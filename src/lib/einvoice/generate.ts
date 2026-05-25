@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { EInvoiceGenerationError, UnsupportedFormatError } from "../foundation/errors";
 import type { EslogOptions } from "../eslog/serialize";
 import { serializeEslog } from "../eslog/serialize";
+import { validateEslogXml } from "../eslog/validate-eslog";
 import type { Invoice } from "../invoice/model";
 import { FORMATS, type Format, isFormat, LIB_FORMAT } from "./formats";
 import { toEInvoiceInternal } from "./to-internal";
@@ -14,6 +15,12 @@ export interface GenerateOptions extends EslogOptions {
    * Factur-X PDF metadata; irrelevant to the pure-XML formats here. Default `sl`.
    */
   lang?: string;
+  /**
+   * For `eslog`: validate the produced XML against the official e-SLOG 2.0 XSD
+   * before returning (fails with `EslogValidationError` if non-conformant).
+   * Default `false`. Ignored for `ubl`/`cii` (the lib validates those itself).
+   */
+  validateOutput?: boolean;
 }
 
 // `InvoiceService` is stateless across calls; build once.
@@ -42,10 +49,12 @@ export const generateEInvoice = Effect.fn("generateEInvoice")(function* (
   }
 
   if (format === "eslog") {
-    return yield* Effect.try({
+    const xml = yield* Effect.try({
       try: () => serializeEslog(invoice, options),
       catch: (cause) => new EInvoiceGenerationError("eslog", cause),
     });
+    if (options.validateOutput) yield* validateEslogXml(xml);
+    return xml;
   }
 
   const internal = toEInvoiceInternal(invoice) as unknown as EInvoiceEUInvoice;

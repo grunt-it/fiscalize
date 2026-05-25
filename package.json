@@ -55,6 +55,7 @@
     "ajv-formats": "^3.0.1",
     "effect": "^3.18.4",
     "valibot": "^1.2.0",
-    "xmlbuilder2": "^4.0.3"
+    "xmlbuilder2": "^4.0.3",
+    "xmllint-wasm": "^5.2.0"
   }
 }

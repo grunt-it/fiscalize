@@ -63,10 +63,28 @@ export class UnsupportedFormatError extends Data.TaggedError("UnsupportedFormatE
   }
 }
 
+/**
+ * Produced e-SLOG XML failed validation against the official e-SLOG 2.0 XSD.
+ * 422-class: the document is well-formed but not schema-conformant — almost
+ * always a serializer/mapping gap, surfaced with the XSD errors.
+ */
+export class EslogValidationError extends Data.TaggedError("EslogValidationError")<
+  FiscalizeErrorParams & { issues: ValidationIssue[] }
+> {
+  constructor(issues: ValidationIssue[]) {
+    super({
+      message: `Produced e-SLOG XML failed e-SLOG 2.0 XSD validation (${issues.length} issue${issues.length === 1 ? "" : "s"}).`,
+      status: 422,
+      issues,
+    });
+  }
+}
+
 export type FiscalizeError =
   | InvalidInvoiceError
   | EInvoiceGenerationError
-  | UnsupportedFormatError;
+  | UnsupportedFormatError
+  | EslogValidationError;
 
 function describe(cause: unknown): string {
   if (cause instanceof Error) return cause.message;
