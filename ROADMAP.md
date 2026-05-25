@@ -41,11 +41,36 @@ EN16931 core invoice → **e-SLOG 2.0** + **UBL / CII**, with validation.
 - **Credit notes / corrected invoices** end-to-end (type codes are modelled;
   the negative-amount + reference-to-original rules are not yet exercised).
 
-## P2 — FURS fiscal verification
+## P2 — FURS fiscal verification ✅ (built; live-verify deferred)
 
-Cash-register receipts → ZOI/EOR. Derive from `node-furs-fiscal-verification`
-(TS-ify; cert handling, FURS tax-API calls). Cross-language refs: SLOTax (.NET),
-jurgenwerk/furs_fiscal_verification (Ruby).
+Cash-register receipts → ZOI/EOR (`src/lib/furs/`). TS/Effect port of the
+JSON/JWS FURS protocol; cross-checked against `node-furs-fiscal-verification`,
+`jurgenwerk/furs_fiscal_verification`, and `boris-savic/python-furs-fiscal`.
+
+- **Cert** — load taxpayer PKCS#12 → key + identity (subject/issuer/serial;
+  serial kept as an exact BigInt — real test cert serials exceed 2^53).
+- **ZOI** — `MD5(RSA-SHA256 / PKCS#1 v1.5( taxNo + dd-MM-yyyy HH:mm:ss + invNo +
+  premiseID + deviceID + amount ))`. PKCS#1 v1.5 (deterministic), date with
+  dashes — resolved the divergence between the reference clients (node-furs used
+  dots; python-furs used PSS) in favour of the deterministic, 2-of-3 form.
+- **JWS** — RS256 with FURS's custom header (`subject_name`/`issuer_name`/`serial`,
+  serial emitted as an exact integer literal).
+- **Messages** — `InvoiceRequest` + immovable `BusinessPremiseRequest`; client
+  `echo` / `registerBusinessPremise` / `reportInvoice` (→ ZOI + EOR + printable).
+
+Unit-verified (ZOI cross-validated vs independent `node:crypto`; JWS signature
+verifies; loads the real FURS demo test cert).
+
+### Deferred / blocked
+
+- **Live test-env round-trip.** Could not be completed from the build env:
+  **bun 1.3.6 does not present an outbound mTLS client certificate**, and the
+  legacy FURS test endpoint rejects modern-OpenSSL TLS from a proxied network.
+  Run the opt-in `furs-live.test.ts` under a **Node** runtime on an unproxied
+  network (with a FURS test p12) to confirm end-to-end — see the test's header.
+- **Verify FURS's response JWS signature** against the FURS public cert (the
+  reference clients skip this; currently decoded without verification).
+- **Refunds / corrective receipts**, movable premises (A/B/C), sales-book mode.
 
 ## P3 — integration surface
 
