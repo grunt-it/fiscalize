@@ -1,0 +1,16 @@
+# Bun configuration file
+# See https://bun.sh/docs/runtime/bunfig
+#
+# @grunt-it scoped packages resolve from GitHub Packages. The token is read from
+# the REGISTRY_TOKEN env var (a PAT with read:packages) — no secret lives in this
+# file, so it is safe to commit. CI provides REGISTRY_TOKEN as a secret.
+
+[install]
+[install.scopes]
+"@grunt-it" = { token = "$REGISTRY_TOKEN", url = "https://npm.pkg.github.com" }
+
+# Optional: Configure cache directory
+# cache = "node_modules/.cache/bun"
+
+# Optional: Set default registry (uncomment if needed)
+# registry = "https://registry.npmjs.org"

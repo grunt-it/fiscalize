@@ -1,8 +1,9 @@
 # @grunt-it/fiscalize
 
-Open-source Slovenian **fiscalization + e-invoicing** toolkit on the grunt-it
+Private, in-house **fiscalization + e-invoicing** toolkit for grunt-it, on the
 TS/Effect stack — the compliance-hard sliver of what Minimax does, as a reusable,
-**framework-agnostic** engine (not a full accounting suite).
+**framework-agnostic** engine (not a full accounting suite). Internal grunt-it
+tool, distributed via GitHub Packages — not a public release.
 
 It knows nothing about Medusa, HTTP frameworks, or any host: build an invoice,
 get conformant XML out. Consumers (e.g. a Medusa fiscalization plugin) wrap it as
@@ -29,15 +30,19 @@ fork away from them. Rule-change monitoring is tracked via `upkeep`.
 
 ## Install
 
-Published to GitHub Packages. Create a `bunfig.toml`:
+Published to **GitHub Packages** under the `@grunt-it` scope. Auth follows the
+house standard: a committed `bunfig.toml` that reads the token from the
+`REGISTRY_TOKEN` env var (the same config app-template / utility-belt use; CI
+provides `REGISTRY_TOKEN` as a secret). In the consuming repo:
 
 ```toml
+# bunfig.toml — no secret in the file, safe to commit
 [install.scopes]
 "@grunt-it" = { token = "$REGISTRY_TOKEN", url = "https://npm.pkg.github.com" }
 ```
 
 ```bash
-export REGISTRY_TOKEN="ghp_…"   # a PAT with read:packages
+export REGISTRY_TOKEN="ghp_…"   # locally: a PAT with read:packages
 bun add @grunt-it/fiscalize
 ```
 
@@ -142,4 +147,6 @@ bunx tsc --noEmit
 
 ## License
 
-MIT — see [`LICENSE`](./LICENSE).
+UNLICENSED — private/internal grunt-it tool. Not for public distribution.
+(Bundled third-party schema files keep their own terms — see
+[`src/lib/eslog/schema/PROVENANCE.md`](./src/lib/eslog/schema/PROVENANCE.md).)

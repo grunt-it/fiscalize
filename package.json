@@ -1,8 +1,9 @@
 {
   "name": "@grunt-it/fiscalize",
   "version": "0.1.0",
-  "description": "Open-source Slovenian fiscalization + e-invoicing toolkit (TS/Effect). P1: EN16931 → e-SLOG 2.0 / UBL e-invoice generation + validation, deriving from E-Invoice-EU. Framework-agnostic engine.",
+  "description": "Private/internal grunt-it Slovenian fiscalization + e-invoicing toolkit (TS/Effect). P1: EN16931 → e-SLOG 2.0 / UBL e-invoice generation + validation, deriving from E-Invoice-EU. Framework-agnostic engine.",
   "type": "module",
+  "license": "UNLICENSED",
   "module": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
@@ -14,8 +15,7 @@
   "files": [
     "src",
     "README.md",
-    "ROADMAP.md",
-    "LICENSE"
+    "ROADMAP.md"
   ],
   "repository": {
     "type": "git",

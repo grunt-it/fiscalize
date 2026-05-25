@@ -28,6 +28,3 @@ logs
 
 # macOS
 .DS_Store
-
-# Bun config with tokens
-bunfig.toml
