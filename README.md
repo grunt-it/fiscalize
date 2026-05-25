@@ -97,6 +97,24 @@ const program = Effect.gen(function* () {
 
 `serializeEslog(invoice)` is a pure synchronous escape hatch for e-SLOG only.
 
+### Validate produced e-SLOG against the official XSD
+
+```ts
+import { generateEInvoice, validateEslogXml } from "@grunt-it/fiscalize";
+
+// validate on the way out…
+const xml = await Effect.runPromise(
+  generateEInvoice(invoice, { format: "eslog", validateOutput: true }),
+);
+
+// …or validate any e-SLOG XML string standalone
+yield* validateEslogXml(someEslogXml);
+```
+
+`validateEslogXml` checks the XML against the **official e-SLOG 2.0 XSD**
+(`eSLOG20_INVOIC_v200.xsd` + `xmldsig-core-schema.xsd`, from the epos.si Aug-2020
+package), using xmllint compiled to WebAssembly — no native bindings.
+
 ## The model
 
 `Invoice` is a clean, EN16931-aligned **core invoice**: header (BT-1/2/3/5/9/72),
@@ -106,12 +124,13 @@ the mapping to each syntax stays auditable. Validated with `valibot`.
 
 ## What's covered vs deferred
 
-P1 maps the **mandatory + common core**. Document-level allowances/charges,
-line-level allowances, contacts, multiple payment means, e-SLOG XSD/schematron
-output validation, and the long tail of optional BTs are deferred — see
-[`ROADMAP.md`](./ROADMAP.md). The e-SLOG mapping is grounded in the official
-spec (epos.si) and cross-checked against the MIT-licensed reference generator
-`Media24si/eslog2`.
+P1 maps the **mandatory + common core**, and produced e-SLOG XML is validated
+against the official e-SLOG 2.0 **XSD**. Deferred (see [`ROADMAP.md`](./ROADMAP.md)):
+business-rule (schematron-equivalent) validation — the official package ships no
+`.sch`, so those rules are spec prose — plus document/line-level allowances,
+contacts, multiple payment means, and the long tail of optional BTs. The e-SLOG
+mapping is grounded in the official spec (epos.si) and cross-checked against the
+MIT-licensed reference generator `Media24si/eslog2`.
 
 ## Development
 

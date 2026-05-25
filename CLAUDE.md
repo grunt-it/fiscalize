@@ -27,7 +27,11 @@ wrap it as a leaf dependency. Do not couple it to any framework.
   (valibot). This is the single input type consumers construct.
 - `src/lib/eslog/` — **owned** e-SLOG 2.0 serializer: domain model → e-SLOG XML
   (UN/EDIFACT-INVOIC-derived, `urn:eslog:2.00`). This is the Slovenian delta the
-  upstream lib does not provide.
+  upstream lib does not provide. `validate-eslog.ts` validates produced XML
+  against the official XSD in `schema/` (`eSLOG20_INVOIC_v200.xsd` +
+  `xmldsig-core-schema.xsd`, vendored from epos.si) via `xmllint-wasm`. The XSDs
+  are loaded with bun text imports (`with { type: "text" }`; see `src/types.d.ts`)
+  so they ship in the package and work with no build step.
 - `src/lib/einvoice/` — bridge to `@e-invoice-eu/core`: maps the domain model →
   the lib's UBL-shaped internal JSON (`ubl:Invoice` / `cbc:`/`cac:`) → UBL / CII
   output, plus EN16931 validation via the lib's `invoiceSchema`.

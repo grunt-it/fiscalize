@@ -41,4 +41,5 @@ export * from "./lib/foundation";
 export * from "./lib/invoice";
 export * from "./lib/einvoice";
 export { type EslogOptions, serializeEslog } from "./lib/eslog/serialize";
+export { validateEslogXml } from "./lib/eslog/validate-eslog";
 export * as eslogCodes from "./lib/eslog/codes";
