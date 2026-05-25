@@ -36,4 +36,23 @@ export class FursError extends Data.TaggedError("FursError")<{
   }
 }
 
-export type FursFailure = FursCertError | FursConnectionError | FursError;
+/**
+ * FURS's response could not be authenticated: its JWS signature did not verify
+ * against the configured FURS public certificate. A potential spoof / MITM —
+ * the response (and any EOR in it) must NOT be trusted.
+ */
+export class FursResponseSignatureError extends Data.TaggedError("FursResponseSignatureError")<{
+  message: string;
+  status: number;
+  cause?: unknown;
+}> {
+  constructor(message = "FURS response signature did not verify", cause?: unknown) {
+    super({ message, status: 502, cause });
+  }
+}
+
+export type FursFailure =
+  | FursCertError
+  | FursConnectionError
+  | FursError
+  | FursResponseSignatureError;

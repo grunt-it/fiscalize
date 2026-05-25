@@ -4,8 +4,8 @@ import * as v from "valibot";
 import { InvalidInvoiceError } from "../foundation/errors";
 import { type FursCert, loadP12 } from "./cert";
 import { DEFAULT_TIMEZONE, formatFursDateTime } from "./datetime";
-import { FursConnectionError, FursError } from "./errors";
-import { decodeJwsPayload, signFursJws } from "./jws";
+import { FursConnectionError, FursError, FursResponseSignatureError } from "./errors";
+import { decodeJwsPayload, signFursJws, verifyFursResponse } from "./jws";
 import {
   buildBusinessPremiseRequest,
   buildInvoiceRequest,
@@ -39,6 +39,13 @@ export interface FursClientConfig {
    * supply the CA out of band) for hardened production use.
    */
   rejectUnauthorized?: boolean;
+  /**
+   * FURS's response-signing certificate (PEM). When set, every signed response
+   * has its JWS signature verified against it before the EOR is trusted —
+   * failures raise `FursResponseSignatureError`. Strongly recommended for
+   * production. When omitted, responses are decoded without verification.
+   */
+  fursResponseCertPem?: string;
   requestTimeoutMs?: number;
 }
 
@@ -57,11 +64,14 @@ export interface FursClient {
   /** Register an immovable business premise. Resolves `true` on success. */
   registerBusinessPremise(
     premise: FursBusinessPremise,
-  ): Effect.Effect<true, FursConnectionError | FursError | InvalidInvoiceError>;
+  ): Effect.Effect<true, FursConnectionError | FursError | FursResponseSignatureError | InvalidInvoiceError>;
   /** Fiscally verify an invoice → ZOI + EOR + printable mark. */
   reportInvoice(
     invoice: FursInvoice,
-  ): Effect.Effect<InvoiceResult, FursConnectionError | FursError | InvalidInvoiceError>;
+  ): Effect.Effect<
+    InvoiceResult,
+    FursConnectionError | FursError | FursResponseSignatureError | InvalidInvoiceError
+  >;
   /** The loaded certificate's identity (subject/issuer/serial). */
   readonly cert: FursCert;
 }
@@ -107,7 +117,17 @@ export const makeFursClient = Effect.fn("makeFursClient")(function* (config: Fur
       if (typeof responseToken !== "string") {
         return yield* Effect.fail(new FursConnectionError("FURS response missing token"));
       }
-      const decoded = decodeJwsPayload<Record<string, Record<string, any>>>(responseToken);
+      // Verify FURS's signature when a cert is configured; otherwise decode unverified.
+      const decoded = config.fursResponseCertPem
+        ? yield* Effect.try({
+            try: () =>
+              verifyFursResponse<Record<string, Record<string, any>>>(
+                responseToken,
+                config.fursResponseCertPem as string,
+              ),
+            catch: (cause) => new FursResponseSignatureError(undefined, cause),
+          })
+        : decodeJwsPayload<Record<string, Record<string, any>>>(responseToken);
       const envelope = decoded[Object.keys(decoded)[0] ?? ""];
       if (envelope?.Error) {
         return yield* Effect.fail(new FursError(envelope.Error.ErrorCode, envelope.Error.ErrorMessage));
