@@ -1,4 +1,7 @@
-import { invoiceSchema } from "@e-invoice-eu/core";
+// `invoiceSchema` is loaded lazily (dynamic import) so the engine stays
+// importable on non-Node runtimes — @e-invoice-eu/core is Node-only (module-init
+// crash under Cloudflare Workers). validateEn16931 therefore works on Node and
+// throws only-if-called elsewhere. See docs/RUNTIME-COMPAT.md.
 // `@e-invoice-eu/core`'s invoiceSchema is JSON Schema draft 2019-09 → use Ajv2019.
 import AjvImport, { type ValidateFunction } from "ajv/dist/2019.js";
 import addFormatsImport from "ajv-formats";
@@ -14,8 +17,9 @@ const addFormats = ((addFormatsImport as unknown as { default?: unknown }).defau
 
 let validator: ValidateFunction | undefined;
 
-function getValidator(): ValidateFunction {
+async function getValidator(): Promise<ValidateFunction> {
   if (!validator) {
+    const { invoiceSchema } = await import("@e-invoice-eu/core");
     const ajv = new Ajv({ allErrors: true, strict: false });
     addFormats(ajv);
     validator = ajv.compile(invoiceSchema);
@@ -31,7 +35,7 @@ function getValidator(): ValidateFunction {
  */
 export const validateEn16931 = Effect.fn("validateEn16931")(function* (invoice: Invoice) {
   const internal = toEInvoiceInternal(invoice);
-  const validate = getValidator();
+  const validate = yield* Effect.promise(() => getValidator());
   if (validate(internal)) return internal;
 
   const issues: ValidationIssue[] = (validate.errors ?? []).map((e) => ({
