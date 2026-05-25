@@ -154,10 +154,12 @@ replies — the client then verifies each response's JWS signature before trusti
 the EOR (raising `FursResponseSignatureError` on a spoofed/tampered response).
 Strongly recommended for production.
 
-> **Runtime note:** outbound mutual-TLS client certs do **not** work under bun
-> 1.3.6 — run the FURS client under **Node** until bun supports them. The logic
-> is unit-verified; the live FURS-test round-trip is the one deferred step
-> (see [`ROADMAP.md`](./ROADMAP.md)).
+> **⚠ Runtime requirement — live FURS needs Node, not bun.** Outbound mutual-TLS
+> client certs do **not** work under bun 1.3.6, so the live FURS submission path
+> (`echo` / `reportInvoice` / `registerBusinessPremise`) must run under a **Node**
+> runtime on a non-proxied network. The ZOI / JWS / verification crypto runs
+> anywhere (incl. bun). This is a real deployment constraint, documented in full
+> with the opt-in path: **[`docs/FURS-RUNTIME.md`](./docs/FURS-RUNTIME.md)**.
 
 ## The model
 
@@ -175,6 +177,18 @@ business-rule (schematron-equivalent) validation — the official package ships 
 contacts, multiple payment means, and the long tail of optional BTs. The e-SLOG
 mapping is grounded in the official spec (epos.si) and cross-checked against the
 MIT-licensed reference generator `Media24si/eslog2`.
+
+## Examples
+
+Runnable end-to-end scripts in [`examples/`](./examples):
+
+```bash
+bun run examples/e-invoice.ts     # model → e-SLOG 2.0 (XSD-valid) + UBL
+bun run examples/furs-offline.ts  # FURS ZOI + request-JWS + response-verify (offline)
+```
+
+`examples/furs-offline.ts` shows the FURS crypto without a live call (runs under
+bun). For a live submission, see [`docs/FURS-RUNTIME.md`](./docs/FURS-RUNTIME.md).
 
 ## Development
 
