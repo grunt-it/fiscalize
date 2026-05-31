@@ -7,9 +7,9 @@
 export const DEFAULT_TIMEZONE = "Europe/Ljubljana";
 
 export interface FursDateTime {
-  /** `dd-MM-yyyy HH:mm:ss` — the ZOI date component. */
+  /** `dd-MM-yyyy HH:mm:ss`, the ZOI date component. */
   zoi: string;
-  /** `yyyy-MM-ddTHH:mm:ss` — the message IssueDateTime / DateTime. */
+  /** `yyyy-MM-ddTHH:mm:ss`, the message IssueDateTime / DateTime. */
   iso: string;
 }
 

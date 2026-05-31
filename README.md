@@ -1,31 +1,41 @@
 # @grunt-it/fiscalize
 
-Private, in-house **fiscalization + e-invoicing** toolkit for grunt-it, on the
-TS/Effect stack — the compliance-hard sliver of what Minimax does, as a reusable,
-**framework-agnostic** engine (not a full accounting suite). Internal grunt-it
-tool, distributed via GitHub Packages — not a public release.
+An open-source engine for **national e-invoicing and fiscal clearance in the EU**:
+the country-specific, real-time submission of invoices to a member state's tax
+authority (certificates, protective marks, gap-free sequencing, response
+authentication).
 
-It knows nothing about Medusa, HTTP frameworks, or any host: build an invoice,
-get conformant XML out. Consumers (e.g. a Medusa fiscalization plugin) wrap it as
-a leaf dependency.
+Document generation (EN16931 → UBL / CII / Factur-X) is handled by the upstream
+library [`@e-invoice-eu/core`](https://github.com/gflohr/e-invoice-eu), which
+fiscalize builds on rather than forks. fiscalize adds the missing layer above it:
+a **pluggable per-country adapter interface over EN16931**, with Slovenia
+(e-SLOG 2.0 + FURS) as the first complete pilot adapter. The architecture is
+designed to generalise across the EU as the ViDA mandate takes effect (cross-border
+B2B 2030, full harmonisation 2035).
 
-> **Status — P1 + P2.** Covers the **e-invoice core** (generate + validate an
+It is framework-agnostic: build an invoice, get conformant XML out, and clear it
+with the national authority. Host-agnostic consumers wrap it as a leaf dependency.
+
+> License: engine + adapters Apache-2.0.
+
+> **Status, P1 + P2.** Covers the **e-invoice core** (generate + validate an
 > EN16931 core invoice as **e-SLOG 2.0** / **UBL** / **CII**, with official-XSD
-> validation) and **FURS fiscal verification** (ZOI/EOR — unit-verified; live
-> test-env round-trip deferred, see below). Medusa integration and the
-> service/MCP surface are later phases — see [`ROADMAP.md`](./ROADMAP.md).
+> validation) and **FURS fiscal verification** (ZOI/EOR, unit-verified; live
+> test-env round-trip deferred, see below). The deployable clearance service
+> ([blagajnica](https://github.com/grunt-it/blagajnica)) and the invoicing UI are
+> later phases, see [`ROADMAP.md`](./ROADMAP.md).
 
 ## Why this shape
 
 Slovenia's e-SLOG 2.0 is EN16931-compliant but is its **own** XML syntax
-(UN/EDIFACT INVOIC-derived, namespace `urn:eslog:2.00`) — not UBL. So fiscalize:
+(UN/EDIFACT INVOIC-derived, namespace `urn:eslog:2.00`), not UBL. So fiscalize:
 
 - **depends on** [`@e-invoice-eu/core`](https://github.com/gflohr/e-invoice-eu)
   (WTFPL) for the EN16931 model, validation, and UBL / CII / Peppol / Factur-X
-  serialization — the hard, maintained part; and
+  serialization, the hard, maintained part; and
 - **owns** the thin Slovenian delta: an **e-SLOG 2.0 serializer**.
 
-Staying on upstream is deliberate — EN16931 / Peppol rules move (the SI B2B
+Staying on upstream is deliberate, EN16931 / Peppol rules move (the SI B2B
 mandate lands **Jan 2028**), and we want to inherit those updates rather than
 fork away from them. Rule-change monitoring is tracked via `upkeep`.
 
@@ -37,7 +47,7 @@ house standard: a committed `bunfig.toml` that reads the token from the
 provides `REGISTRY_TOKEN` as a secret). In the consuming repo:
 
 ```toml
-# bunfig.toml — no secret in the file, safe to commit
+# bunfig.toml, no secret in the file, safe to commit
 [install.scopes]
 "@grunt-it" = { token = "$REGISTRY_TOKEN", url = "https://npm.pkg.github.com" }
 ```
@@ -95,7 +105,7 @@ import { Effect } from "effect";
 import { parseInvoice, validateEn16931, generateEInvoice, serializeEslog } from "@grunt-it/fiscalize";
 
 const program = Effect.gen(function* () {
-  const invoice = yield* parseInvoice(rawInput);   // valibot — structural gate
+  const invoice = yield* parseInvoice(rawInput);   // valibot, structural gate
   yield* validateEn16931(invoice);                 // Ajv vs EN16931 schema
   return yield* generateEInvoice(invoice, { format: "ubl" });
 });
@@ -119,7 +129,7 @@ yield* validateEslogXml(someEslogXml);
 
 `validateEslogXml` checks the XML against the **official e-SLOG 2.0 XSD**
 (`eSLOG20_INVOIC_v200.xsd` + `xmldsig-core-schema.xsd`, from the epos.si Aug-2020
-package), using xmllint compiled to WebAssembly — no native bindings.
+package), using xmllint compiled to WebAssembly, no native bindings.
 
 ## FURS fiscal verification (P2)
 
@@ -150,11 +160,11 @@ shop's eDavki cert in production). ZOI is `MD5(RSA-SHA256/PKCS#1 v1.5(…))`;
 messages are RS256 JWS over mutual TLS.
 
 Pass `fursResponseCertPem` (FURS's response-signing cert) to authenticate FURS's
-replies — the client then verifies each response's JWS signature before trusting
+replies, the client then verifies each response's JWS signature before trusting
 the EOR (raising `FursResponseSignatureError` on a spoofed/tampered response).
 Strongly recommended for production.
 
-> **⚠ Runtime requirement — live FURS needs Node, not bun.** Outbound mutual-TLS
+> **⚠ Runtime requirement, live FURS needs Node, not bun.** Outbound mutual-TLS
 > client certs do **not** work under bun 1.3.6, so the live FURS submission path
 > (`echo` / `reportInvoice` / `registerBusinessPremise`) must run under a **Node**
 > runtime on a non-proxied network. The ZOI / JWS / verification crypto runs
@@ -172,8 +182,8 @@ the mapping to each syntax stays auditable. Validated with `valibot`.
 
 P1 maps the **mandatory + common core**, and produced e-SLOG XML is validated
 against the official e-SLOG 2.0 **XSD**. Deferred (see [`ROADMAP.md`](./ROADMAP.md)):
-business-rule (schematron-equivalent) validation — the official package ships no
-`.sch`, so those rules are spec prose — plus document/line-level allowances,
+business-rule (schematron-equivalent) validation, the official package ships no
+`.sch`, so those rules are spec prose, plus document/line-level allowances,
 contacts, multiple payment means, and the long tail of optional BTs. The e-SLOG
 mapping is grounded in the official spec (epos.si) and cross-checked against the
 MIT-licensed reference generator `Media24si/eslog2`.
@@ -200,6 +210,6 @@ bunx tsc --noEmit
 
 ## License
 
-UNLICENSED — private/internal grunt-it tool. Not for public distribution.
-(Bundled third-party schema files keep their own terms — see
+Apache-2.0 (engine + country adapters). (Bundled third-party schema files keep
+their own terms, see
 [`src/lib/eslog/schema/PROVENANCE.md`](./src/lib/eslog/schema/PROVENANCE.md).)

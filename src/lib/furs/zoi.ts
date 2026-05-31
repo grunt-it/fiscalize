@@ -14,7 +14,7 @@ export interface ZoiInput {
 }
 
 /**
- * Compute the **ZOI** (Zaščitna oznaka izdajatelja — issuer's protective mark).
+ * Compute the **ZOI** (Zaščitna oznaka izdajatelja, issuer's protective mark).
  *
  * Per the FURS spec: concatenate the fields, sign with the issuer's private key
  * using **RSA-SHA256 (RSASSA-PKCS#1 v1.5)**, then take the **MD5** of the

@@ -1,9 +1,9 @@
 /**
- * Runnable OFFLINE FURS example — demonstrates the ZOI, request-JWS and
+ * Runnable OFFLINE FURS example, demonstrates the ZOI, request-JWS and
  * response-verification crypto WITHOUT a live FURS call.
  *
  * A live round-trip (echo / reportInvoice) additionally needs a real FURS
- * certificate AND a Node-mTLS-capable, non-proxied runtime — see
+ * certificate AND a Node-mTLS-capable, non-proxied runtime, see
  * docs/FURS-RUNTIME.md. This example uses a throwaway self-signed cert so it
  * runs anywhere (bun included) and shows exactly what the client computes.
  *
@@ -17,7 +17,7 @@ import { formatFursDateTime } from "../src/lib/furs/datetime";
 import { signFursJws, verifyFursResponse } from "../src/lib/furs/jws";
 import { calculateZoi, zoiToPrintable } from "../src/lib/furs/zoi";
 
-// — Mint a throwaway certificate (stands in for the taxpayer's FURS cert) —
+//, Mint a throwaway certificate (stands in for the taxpayer's FURS cert) , 
 function makeDemoP12(): { p12: Uint8Array; passphrase: string } {
   const keys = forge.pki.rsa.generateKeyPair(2048);
   const cert = forge.pki.createCertificate();
@@ -39,9 +39,9 @@ const issuedAt = new Date("2026-05-25T14:30:00Z");
 const result = await Effect.runPromise(
   Effect.gen(function* () {
     const cert = yield* loadP12(p12, passphrase);
-    console.log(`✓ cert loaded — subject: ${cert.subjectName}, serial: ${cert.serial}`);
+    console.log(`✓ cert loaded, subject: ${cert.subjectName}, serial: ${cert.serial}`);
 
-    // 1. ZOI — the issuer's protective mark.
+    // 1. ZOI, the issuer's protective mark.
     const { zoi: zoiDate } = formatFursDateTime(issuedAt, "Europe/Ljubljana");
     const zoi = calculateZoi(
       { taxNumber: 10489185, issueDateTime: zoiDate, invoiceNumber: "11", businessPremiseId: "BP101", electronicDeviceId: "0001", invoiceAmount: 19.15 },
@@ -50,7 +50,7 @@ const result = await Effect.runPromise(
     console.log(`✓ ZOI: ${zoi}`);
     console.log(`✓ printable (QR/PDF417): ${zoiToPrintable(zoi, issuedAt, 10489185)}`);
 
-    // 2. Request JWS — what the client posts to FURS over mutual TLS.
+    // 2. Request JWS, what the client posts to FURS over mutual TLS.
     const token = signFursJws({ InvoiceRequest: { ProtectedID: zoi } }, cert.privateKeyPem, {
       subjectName: cert.subjectName,
       issuerName: cert.issuerName,
@@ -58,7 +58,7 @@ const result = await Effect.runPromise(
     });
     console.log(`✓ request JWS signed (${token.split(".").length}-part compact JWS)`);
 
-    // 3. Response verification — here we mint a response signed by our demo cert
+    // 3. Response verification, here we mint a response signed by our demo cert
     //    standing in for FURS, then verify it (in production: FURS's real cert).
     const fakeFursResponse = signFursJws(
       { InvoiceResponse: { UniqueInvoiceID: "demo-eor-1234" } },
@@ -66,7 +66,7 @@ const result = await Effect.runPromise(
       { subjectName: "CN=FURS", issuerName: "CN=Tax CA", serial: "1" },
     );
     const verified = verifyFursResponse<{ InvoiceResponse: { UniqueInvoiceID: string } }>(fakeFursResponse, cert.certPem);
-    console.log(`✓ response verified — EOR: ${verified.InvoiceResponse.UniqueInvoiceID}`);
+    console.log(`✓ response verified, EOR: ${verified.InvoiceResponse.UniqueInvoiceID}`);
 
     return zoi;
   }),

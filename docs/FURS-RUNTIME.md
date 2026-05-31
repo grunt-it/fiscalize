@@ -15,7 +15,7 @@ the client must present the taxpayer certificate during the TLS handshake.
   not a fiscalize bug.
 - Therefore **live FURS calls (test *and* production) must run under Node**, on a
   network that doesn't MITM/terminate TLS (a transparent HTTPS proxy breaks the
-  mTLS session — observed in CI/sandbox environments).
+  mTLS session, observed in CI/sandbox environments).
 
 What this means in practice: don't schedule `reportInvoice` / `registerBusinessPremise`
 / `echo` on bun-in-sandbox. Run the FURS-calling component under Node.
@@ -24,7 +24,7 @@ What this means in practice: don't schedule `reportInvoice` / `registerBusinessP
 
 Everything except the live network call: `loadP12`, `calculateZoi`,
 `zoiToPrintable`, `signFursJws`, `verifyFursResponse`. See
-[`examples/furs-offline.ts`](../examples/furs-offline.ts) — runnable under bun.
+[`examples/furs-offline.ts`](../examples/furs-offline.ts), runnable under bun.
 
 ## Running live FURS under Node (the opt-in path)
 
@@ -72,7 +72,7 @@ The FURS protocol implementation is **unit-verified** (ZOI cross-checked against
 an independent `node:crypto` computation; request JWS verifies; response
 verification accepts genuine and rejects spoofed/tampered/wrong-key responses;
 the real FURS demo test cert loads). The single outstanding item is a **one-shot
-live EOR confirmation** from a Node-mTLS runtime — tracked in `ROADMAP.md`.
+live EOR confirmation** from a Node-mTLS runtime, tracked in `ROADMAP.md`.
 
 > Candidate addition to the global `bun.md` rule: "bun (≤1.3.6) cannot present an
-> outbound mTLS client certificate — run mTLS clients under Node." Left to Nik.
+> outbound mTLS client certificate, run mTLS clients under Node." Left to Nik.

@@ -1,6 +1,6 @@
 // Type-only import (erased at runtime). The VALUE (`InvoiceService`) is loaded
 // lazily in getService() so merely importing the engine does NOT pull
-// @e-invoice-eu/core — it's Node-only (crashes at module-init under Cloudflare
+// @e-invoice-eu/core, it's Node-only (crashes at module-init under Cloudflare
 // Workers via tmp-promise → fs.realpathSync). UBL/CII therefore throw only if
 // *called* on a non-Node runtime, not on import. See docs/RUNTIME-COMPAT.md.
 import type { Invoice as EInvoiceEUInvoice, InvoiceService as InvoiceServiceType } from "@e-invoice-eu/core";
@@ -16,7 +16,7 @@ import { toEInvoiceInternal } from "./to-internal";
 export interface GenerateOptions extends EslogOptions {
   format: Format;
   /**
-   * Language tag (e.g. `sl-si`) — only used by `@e-invoice-eu/core` for
+   * Language tag (e.g. `sl-si`), only used by `@e-invoice-eu/core` for
    * Factur-X PDF metadata; irrelevant to the pure-XML formats here. Default `sl`.
    */
   lang?: string;

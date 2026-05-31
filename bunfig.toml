@@ -2,7 +2,7 @@
 # See https://bun.sh/docs/runtime/bunfig
 #
 # @grunt-it scoped packages resolve from GitHub Packages. The token is read from
-# the REGISTRY_TOKEN env var (a PAT with read:packages) — no secret lives in this
+# the REGISTRY_TOKEN env var (a PAT with read:packages), no secret lives in this
 # file, so it is safe to commit. CI provides REGISTRY_TOKEN as a secret.
 
 [install]

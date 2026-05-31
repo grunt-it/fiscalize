@@ -11,7 +11,7 @@ import { makeFursClient } from "../lib/furs/client";
  *   FISCALIZE_FURS_TEST_PASSPHRASE='…' bun test
  *
  * NOTE (2026-05): a live round-trip could not be completed from the build
- * environment — bun 1.3.6 does not present an outbound mTLS client certificate,
+ * environment, bun 1.3.6 does not present an outbound mTLS client certificate,
  * and the legacy FURS test endpoint also rejects modern-OpenSSL TLS from a
  * proxied network. Run this under a Node runtime on an unproxied network to
  * verify end-to-end (the implementation is otherwise unit-verified). See ROADMAP.

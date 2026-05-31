@@ -1,5 +1,5 @@
 // `invoiceSchema` is loaded lazily (dynamic import) so the engine stays
-// importable on non-Node runtimes — @e-invoice-eu/core is Node-only (module-init
+// importable on non-Node runtimes, @e-invoice-eu/core is Node-only (module-init
 // crash under Cloudflare Workers). validateEn16931 therefore works on Node and
 // throws only-if-called elsewhere. See docs/RUNTIME-COMPAT.md.
 // `@e-invoice-eu/core`'s invoiceSchema is JSON Schema draft 2019-09 → use Ajv2019.

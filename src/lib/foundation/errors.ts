@@ -22,7 +22,7 @@ export interface ValidationIssue {
 }
 
 /**
- * The invoice failed validation — the input model (valibot) or the EN16931
+ * The invoice failed validation, the input model (valibot) or the EN16931
  * business rules (Ajv via `@e-invoice-eu/core`). 400-class: caller's data.
  */
 export class InvalidInvoiceError extends Data.TaggedError("InvalidInvoiceError")<
@@ -34,7 +34,7 @@ export class InvalidInvoiceError extends Data.TaggedError("InvalidInvoiceError")
 }
 
 /**
- * Serialization/generation failed after the invoice was accepted — e.g. the
+ * Serialization/generation failed after the invoice was accepted, e.g. the
  * underlying renderer threw. 500-class: our problem, not the caller's.
  */
 export class EInvoiceGenerationError extends Data.TaggedError("EInvoiceGenerationError")<
@@ -65,7 +65,7 @@ export class UnsupportedFormatError extends Data.TaggedError("UnsupportedFormatE
 
 /**
  * Produced e-SLOG XML failed validation against the official e-SLOG 2.0 XSD.
- * 422-class: the document is well-formed but not schema-conformant — almost
+ * 422-class: the document is well-formed but not schema-conformant, almost
  * always a serializer/mapping gap, surfaced with the XSD errors.
  */
 export class EslogValidationError extends Data.TaggedError("EslogValidationError")<

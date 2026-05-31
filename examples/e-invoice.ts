@@ -40,7 +40,7 @@ if (!eslog.ok) throw new Error(`e-SLOG failed: ${eslog.error.message}`);
 console.log("✓ e-SLOG 2.0 generated + XSD-valid:");
 console.log(`${eslog.data.split("\n").slice(0, 4).join("\n")}\n  …(${eslog.data.length} bytes)\n`);
 
-// 2. UBL — EN16931-validated before generation.
+// 2. UBL, EN16931-validated before generation.
 const ubl = await createEInvoice(invoice, { format: "ubl" });
 if (!ubl.ok) throw new Error(`UBL failed: ${ubl.error.message}`);
 console.log(`✓ UBL generated (${ubl.data.length} bytes, EN16931-validated)\n`);
@@ -49,6 +49,6 @@ console.log(`✓ UBL generated (${ubl.data.length} bytes, EN16931-validated)\n`)
 await Effect.runPromise(validateEslogXml(eslog.data));
 console.log("✓ validateEslogXml: passed");
 
-// 4. Invalid input never throws — it returns a 400 result.
+// 4. Invalid input never throws, it returns a 400 result.
 const bad = await createEInvoice({ invoiceNumber: 123 }, { format: "ubl" });
 console.log(`✓ bad input rejected cleanly: ok=${bad.ok}, status=${bad.ok ? "-" : bad.error.status}`);

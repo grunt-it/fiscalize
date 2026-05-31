@@ -14,7 +14,7 @@ export type FursVat = v.InferOutput<typeof FursVat>;
 /** Numbering structure: per-device (`B`) or central (`C`). */
 export const NumberingStructure = v.picklist(["B", "C"]);
 
-// ── Invoice (fiscal verification, cash-register receipt — not the e-invoice) ──
+// ── Invoice (fiscal verification, cash-register receipt, not the e-invoice) ──
 export const FursInvoice = v.object({
   /** Issuer tax number (8 digits). */
   taxNumber: v.pipe(v.number(), v.integer()),

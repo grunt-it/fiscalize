@@ -42,7 +42,7 @@ describe("calculateZoi", () => {
     const a = calculateZoi(input, certFx.privateKeyPem);
     const b = calculateZoi(input, certFx.privateKeyPem);
     expect(a).toMatch(/^[0-9a-f]{32}$/);
-    expect(a).toBe(b); // deterministic — confirms PKCS#1 v1.5, not PSS
+    expect(a).toBe(b); // deterministic, confirms PKCS#1 v1.5, not PSS
   });
 
   test("matches an independent RSA-SHA256 + MD5 computation", () => {

@@ -2,7 +2,7 @@
 
 `@grunt-it/fiscalize` runs on **Node** (full) and on **non-Node runtimes like
 Cloudflare Workers / workerd** (a subset). This matrix is the verified ground
-truth — tested under local `workerd` (`wrangler dev`), per function.
+truth, tested under local `workerd` (`wrangler dev`), per function.
 
 | Capability | Module / dep | Node | Workers (workerd) |
 |---|---|---|---|
@@ -17,17 +17,17 @@ truth — tested under local `workerd` (`wrangler dev`), per function.
 
 ## The two Workers-incompatible paths
 
-1. **`@e-invoice-eu/core`** (UBL/CII + EN16931 validation) — its ESM eager-imports
+1. **`@e-invoice-eu/core`** (UBL/CII + EN16931 validation), its ESM eager-imports
    `tmp-promise` → `tmp` → `fs.realpathSync`, which Cloudflare's `nodejs_compat`
    (unenv) does not implement. **As of v0.1.3 it is dynamically imported**, so
-   merely importing `@grunt-it/fiscalize` is Workers-safe — `generateEInvoice('ubl'|'cii')`
+   merely importing `@grunt-it/fiscalize` is Workers-safe, `generateEInvoice('ubl'|'cii')`
    and `validateEn16931` throw **only if called** on a non-Node runtime.
 
-2. **`xmllint-wasm`** (`validateEslogXml`) — fails under workerd with
+2. **`xmllint-wasm`** (`validateEslogXml`), fails under workerd with
    `"Worker is not defined"` (it expects a `Worker` global workerd lacks).
    Importing `@grunt-it/fiscalize/eslog` is fine (`serializeEslog` works); only
    `validateEslogXml` fails when called. The serializer's output is
-   **XSD-conformant regardless** — the engine's CI validates it against the
+   **XSD-conformant regardless**, the engine's CI validates it against the
    official e-SLOG 2.0 XSD on every build; you just can't *re-validate* at
    runtime on Workers.
 
@@ -38,7 +38,7 @@ v0.1.3 makes import safe). On Workers:
 
 - ✅ Generate e-SLOG 2.0 + run the full FURS fiscal-verification flow (ZOI / EOR /
   JWS sign + verify).
-- ❌ Don't call UBL/CII generation, `validateEn16931`, or `validateEslogXml` —
+- ❌ Don't call UBL/CII generation, `validateEn16931`, or `validateEslogXml` , 
   those need a Node runtime. Gate them behind a runtime check, or run that part
   on Node (a container / `coolster` service).
 

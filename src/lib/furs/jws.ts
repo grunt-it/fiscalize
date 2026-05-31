@@ -34,7 +34,7 @@ export function signFursJws(payload: unknown, privateKeyPem: string, id: JwsIden
 
 /**
  * Decode a compact JWS payload **without** verifying the signature. Use
- * {@link verifyFursResponse} when you have FURS's public certificate — an
+ * {@link verifyFursResponse} when you have FURS's public certificate, an
  * unverified response (and its EOR) must not be trusted in production.
  */
 export function decodeJwsPayload<T = unknown>(token: string): T {
@@ -48,7 +48,7 @@ export function decodeJwsPayload<T = unknown>(token: string): T {
  * certificate and return its decoded payload. Confirms the response was signed
  * by FURS (not spoofed / tampered).
  *
- * `fursCertPem` is FURS's response-signing certificate (PEM) — the test-env one
+ * `fursCertPem` is FURS's response-signing certificate (PEM), the test-env one
  * is published with the FURS reference clients; production has its own. Throws
  * if the token is malformed or the signature does not verify.
  */

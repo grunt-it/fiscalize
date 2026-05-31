@@ -26,7 +26,7 @@ export interface EslogOptions {
 /**
  * Serialize a {@link Invoice} to an e-SLOG 2.0 invoice XML string.
  *
- * Pure and synchronous — the input is assumed already structurally valid
+ * Pure and synchronous, the input is assumed already structurally valid
  * (run it through `parseInvoice` first). Covers the EN16931 core invoice:
  * header, dates, parties (+ bank + VAT), currency, payment terms, lines,
  * document totals, and the VAT breakdown. See ROADMAP.md for what's deferred.
@@ -165,7 +165,7 @@ function lineGroup(line: InvoiceLine): Record<string, unknown> {
   };
 }
 
-/** S_TAX + the two S_MOA (tax amount, taxable base) — shared by line (G_SG34) and summary (G_SG52). */
+/** S_TAX + the two S_MOA (tax amount, taxable base), shared by line (G_SG34) and summary (G_SG52). */
 function taxGroup(rate: number, category: string, taxAmount: number, baseAmount: number): Record<string, unknown> {
   return {
     S_TAX: {

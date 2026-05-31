@@ -1,8 +1,8 @@
 import { Cause, Effect, Exit } from "effect";
 
 /**
- * Discriminated result for running an Effect at a Promise boundary — lets a
- * non-Effect host (a Medusa plugin, an HTTP handler) consume fiscalize without
+ * Discriminated result for running an Effect at a Promise boundary, lets a
+ * non-Effect host (an HTTP handler, a queue worker) consume fiscalize without
  * adopting Effect. Mirrors `@grunt-it/utility-belt`'s `runSafe`.
  */
 export type EffectSuccess<R> = { ok: true; data: R };
@@ -26,7 +26,7 @@ export function handleCause(cause: Cause.Cause<unknown>): { message: string; sta
 }
 
 /**
- * Run an Effect to a plain `{ ok }` result — never throws. Failures (including
+ * Run an Effect to a plain `{ ok }` result, never throws. Failures (including
  * defects) collapse into `{ ok: false, error: { message, status } }`.
  */
 export async function runSafe<R>(effect: Effect.Effect<R, unknown, never>): Promise<EffectResult<R>> {

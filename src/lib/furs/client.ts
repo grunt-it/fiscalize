@@ -34,14 +34,14 @@ export interface FursClientConfig {
   /** Wall-clock time zone for ZOI/IssueDateTime. Default Europe/Ljubljana. */
   timeZone?: string;
   /**
-   * Verify FURS's server TLS certificate. Default false — the FURS test env
+   * Verify FURS's server TLS certificate. Default false, the FURS test env
    * presents a self-signed CA, matching the reference clients. Set true (and
    * supply the CA out of band) for hardened production use.
    */
   rejectUnauthorized?: boolean;
   /**
    * FURS's response-signing certificate (PEM). When set, every signed response
-   * has its JWS signature verified against it before the EOR is trusted —
+   * has its JWS signature verified against it before the EOR is trusted , 
    * failures raise `FursResponseSignatureError`. Strongly recommended for
    * production. When omitted, responses are decoded without verification.
    */

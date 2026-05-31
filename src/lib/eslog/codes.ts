@@ -11,7 +11,7 @@
  * sample `inv.xml`).
  */
 
-/** Document name code — S_BGM/C_C002/D_1001 (UNCL1001). */
+/** Document name code, S_BGM/C_C002/D_1001 (UNCL1001). */
 export const DOC_TYPE = {
   INVOICE: "380",
   CREDIT_NOTE: "381",
@@ -19,14 +19,14 @@ export const DOC_TYPE = {
   PREPAYMENT_INVOICE: "386",
 } as const;
 
-/** Date/time qualifier — S_DTM/C_C507/D_2005 (UNCL2005). */
+/** Date/time qualifier, S_DTM/C_C507/D_2005 (UNCL2005). */
 export const DTM = {
   ISSUE: "137", // BT-2 document/message date
   DELIVERY: "35", // BT-72 actual delivery date
   DUE: "13", // BT-9 payment due date (within G_SG8)
 } as const;
 
-/** Monetary amount qualifier — S_MOA/C_C516/D_5025 (UNCL5025). */
+/** Monetary amount qualifier, S_MOA/C_C516/D_5025 (UNCL5025). */
 export const MOA = {
   LINE_AMOUNT_WITH_TAX: "38", // line amount incl. VAT (e-SLOG national, NBT-031)
   LINE_NET_AMOUNT: "203", // BT-131 invoice line net amount
@@ -44,53 +44,53 @@ export const MOA = {
   ITEM_DISCOUNT: "509", // BT-147 item price discount
 } as const;
 
-/** Price qualifier — S_PRI/C_C509/D_5125 (UNCL5125). */
+/** Price qualifier, S_PRI/C_C509/D_5125 (UNCL5125). */
 export const PRI = {
   NET: "AAA", // BT-146 item net price
   GROSS: "AAB", // BT-148 item gross price
 } as const;
 
-/** Party function qualifier — S_NAD/D_3035 (UNCL3035). */
+/** Party function qualifier, S_NAD/D_3035 (UNCL3035). */
 export const NAD = {
   BUYER: "BY", // BG-7 buyer
   SELLER: "SE", // BG-4 seller
 } as const;
 
-/** Financial-institution qualifier — S_FII/D_3035 (UNCL3035). */
+/** Financial-institution qualifier, S_FII/D_3035 (UNCL3035). */
 export const FII = {
   PAYEE_BANK: "RB", // seller's account (where payment is made)
   BENEFICIARY_BANK: "BB",
 } as const;
 
-/** Reference qualifier — S_RFF/C_C506/D_1153 (UNCL1153). */
+/** Reference qualifier, S_RFF/C_C506/D_1153 (UNCL1153). */
 export const RFF = {
   VAT: "VA", // BT-31 / BT-48 VAT identifier
   ORDER: "ON", // BT-13 purchase order reference
 } as const;
 
-/** Free-text subject qualifier — S_FTX/D_4451 (UNCL4451). */
+/** Free-text subject qualifier, S_FTX/D_4451 (UNCL4451). */
 export const FTX = {
   GENERAL_INFO: "AAI", // BT-22 invoice note
 } as const;
 
-/** Item description type — S_IMD/D_7077 (UNCL7077). */
+/** Item description type, S_IMD/D_7077 (UNCL7077). */
 export const IMD = {
   ITEM_NAME: "F", // BT-153 (free-form short)
   DESCRIPTION: "A", // BT-154
 } as const;
 
-/** Quantity qualifier — S_QTY/C_C186/D_6063 (UNCL6063). */
+/** Quantity qualifier, S_QTY/C_C186/D_6063 (UNCL6063). */
 export const QTY_INVOICED = "47"; // BT-129 invoiced quantity
 
-/** Duty/tax/fee function qualifier — S_TAX/D_5283 (UNCL5283). 7 = tax. */
+/** Duty/tax/fee function qualifier, S_TAX/D_5283 (UNCL5283). 7 = tax. */
 export const TAX_FUNCTION = "7";
-/** Duty/tax/fee type — S_TAX/C_C241/D_5153. */
+/** Duty/tax/fee type, S_TAX/C_C241/D_5153. */
 export const TAX_TYPE_VAT = "VAT";
 
-/** Currency usage qualifier — S_CUX/C_C504/D_6347 (UNCL6347). 2 = reference currency. */
+/** Currency usage qualifier, S_CUX/C_C504/D_6347 (UNCL6347). 2 = reference currency. */
 export const CUX_REFERENCE = "2";
 
-/** Default unit of measure — S_QTY/D_6411, S_PRI/D_6411 (UN/ECE Rec 20). C62 = unit. */
+/** Default unit of measure, S_QTY/D_6411, S_PRI/D_6411 (UN/ECE Rec 20). C62 = unit. */
 export const DEFAULT_UNIT = "C62";
 
 /** Namespaces of the e-SLOG 2.0 invoice document. */

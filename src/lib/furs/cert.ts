@@ -7,9 +7,9 @@ import { FursCertError } from "./errors";
  * identity fields FURS matches the JWS against.
  */
 export interface FursCert {
-  /** RSA private key, PKCS#1 PEM — used for ZOI + JWS signing. */
+  /** RSA private key, PKCS#1 PEM, used for ZOI + JWS signing. */
   privateKeyPem: string;
-  /** Certificate, PEM — used as the mutual-TLS client certificate. */
+  /** Certificate, PEM, used as the mutual-TLS client certificate. */
   certPem: string;
   /** Subject DN as `CN=…,O=…,…` (comma-joined RDNs), for the JWS header. */
   subjectName: string;
@@ -20,8 +20,8 @@ export interface FursCert {
 }
 
 /**
- * Load a taxpayer PKCS#12 (.p12/.pfx) — as issued by FURS (test) or eDavki
- * (production) — and extract the signing key + identity. Fails with
+ * Load a taxpayer PKCS#12 (.p12/.pfx), as issued by FURS (test) or eDavki
+ * (production), and extract the signing key + identity. Fails with
  * `FursCertError` (e.g. wrong passphrase, no key in the bundle).
  */
 export const loadP12 = Effect.fn("loadP12")(function* (p12: Uint8Array, passphrase: string) {

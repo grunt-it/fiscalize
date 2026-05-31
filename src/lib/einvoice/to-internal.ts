@@ -2,13 +2,13 @@ import { DEFAULTS, type Invoice, type InvoiceLine, type Party, type TaxBreakdown
 
 /**
  * Map the fiscalize {@link Invoice} model to the `@e-invoice-eu/core` internal
- * format — a UBL-shaped JSON tree (`ubl:Invoice` with `cbc:`/`cac:` keys and
+ * format, a UBL-shaped JSON tree (`ubl:Invoice` with `cbc:`/`cac:` keys and
  * `@attr` siblings). The lib renders this to UBL / CII / Peppol and validates it
  * against EN16931. Element *ordering* is handled by the lib's templates, so keys
  * here are in authoring order, not UBL sequence.
  *
  * Covers the EN16931 core invoice. The long tail (contacts, endpoints, document
- * allowances/charges, line allowances) is deferred — see ROADMAP.md.
+ * allowances/charges, line allowances) is deferred, see ROADMAP.md.
  */
 export function toEInvoiceInternal(invoice: Invoice): { "ubl:Invoice": Record<string, unknown> } {
   const currency = invoice.currency ?? DEFAULTS.currency;
@@ -42,7 +42,7 @@ function party(p: Party, side: "supplier" | "customer"): Record<string, unknown>
   const endpointId = p.endpointId ?? p.vatId;
   const out: Record<string, unknown> = {};
 
-  // BT-34 / BT-49 — electronic address (mandatory in EN16931/UBL).
+  // BT-34 / BT-49, electronic address (mandatory in EN16931/UBL).
   if (endpointId) {
     out["cbc:EndpointID"] = endpointId;
     out["cbc:EndpointID@schemeID"] = p.endpointScheme ?? DEFAULTS.endpointScheme;

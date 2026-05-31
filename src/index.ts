@@ -8,7 +8,7 @@ export interface CreateEInvoiceOptions extends GenerateOptions {
   /**
    * Run EN16931 business-rule validation before generating. Defaults to `true`
    * for `ubl`/`cii` and `false` for `eslog` (e-SLOG has its own XSD/schematron
-   * validation path, deferred — see ROADMAP.md).
+   * validation path, deferred, see ROADMAP.md).
    */
   validate?: boolean;
 }
@@ -27,7 +27,7 @@ export const createEInvoiceEffect = (input: unknown, options: CreateEInvoiceOpti
 
 /**
  * Promise-friendly wrapper of {@link createEInvoiceEffect} for non-Effect hosts
- * (e.g. a Medusa plugin). Never throws — returns `{ ok: true, data }` with the
+ * (e.g. an HTTP service or a plugin). Never throws, returns `{ ok: true, data }` with the
  * XML or `{ ok: false, error: { message, status } }`.
  */
 export function createEInvoice(
