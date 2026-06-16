@@ -3,8 +3,9 @@ import { Data } from "effect";
 /** Could not load / decrypt the taxpayer PKCS#12 certificate. */
 export class FursCertError extends Data.TaggedError("FursCertError")<{
   message: string;
-  status: number;
+  status: 400;
   cause?: unknown;
+  [key: string]: unknown;
 }> {
   constructor(message: string, cause?: unknown) {
     super({ message, status: 400, cause });
@@ -14,8 +15,9 @@ export class FursCertError extends Data.TaggedError("FursCertError")<{
 /** Network/TLS failure talking to FURS (unreachable, timeout, handshake). */
 export class FursConnectionError extends Data.TaggedError("FursConnectionError")<{
   message: string;
-  status: number;
+  status: 503;
   cause?: unknown;
+  [key: string]: unknown;
 }> {
   constructor(message: string, cause?: unknown) {
     super({ message, status: 503, cause });
@@ -28,8 +30,9 @@ export class FursConnectionError extends Data.TaggedError("FursConnectionError")
  */
 export class FursError extends Data.TaggedError("FursError")<{
   message: string;
-  status: number;
+  status: 422;
   errorCode: string;
+  [key: string]: unknown;
 }> {
   constructor(errorCode: string, message: string) {
     super({ message: `FURS error ${errorCode}: ${message}`, status: 422, errorCode });
@@ -43,8 +46,9 @@ export class FursError extends Data.TaggedError("FursError")<{
  */
 export class FursResponseSignatureError extends Data.TaggedError("FursResponseSignatureError")<{
   message: string;
-  status: number;
+  status: 502;
   cause?: unknown;
+  [key: string]: unknown;
 }> {
   constructor(message = "FURS response signature did not verify", cause?: unknown) {
     super({ message, status: 502, cause });

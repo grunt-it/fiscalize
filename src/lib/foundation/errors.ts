@@ -7,8 +7,9 @@ import { Data } from "effect";
  */
 export interface FiscalizeErrorParams {
   message: string;
-  status: number;
+  status: 400 | 422 | 500;
   cause?: unknown;
+  [key: string]: unknown;
 }
 
 /**
