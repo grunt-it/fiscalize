@@ -36,7 +36,7 @@ export const FursInvoice = v.object({
 });
 export type FursInvoice = v.InferOutput<typeof FursInvoice>;
 
-// ── Business premise registration (immovable) ────────────────────────────────
+// ── Business premise registration ────────────────────────────────────────────
 export const FursBusinessPremise = v.object({
   taxNumber: v.pipe(v.number(), v.integer()),
   premiseId: v.pipe(v.string(), v.minLength(1)),
@@ -56,6 +56,26 @@ export const FursBusinessPremise = v.object({
   specialNotes: v.optional(v.string()),
 });
 export type FursBusinessPremise = v.InferOutput<typeof FursBusinessPremise>;
+export const FursMovableBusinessPremise = v.object({
+  taxNumber: v.pipe(v.number(), v.integer()),
+  premiseId: v.pipe(v.string(), v.minLength(1)),
+  premiseType: v.picklist(["A", "B", "C"]),
+  /** Date the premise started issuing invoices. */
+  validityDate: v.date(),
+  softwareSupplierTaxNumber: v.optional(v.pipe(v.number(), v.integer())),
+  foreignSoftwareSupplierName: v.optional(v.string()),
+  specialNotes: v.optional(v.string()),
+});
+export type FursMovableBusinessPremise = v.InferOutput<typeof FursMovableBusinessPremise>;
+
+export const FursPremiseRegistration = v.union([FursBusinessPremise, FursMovableBusinessPremise]);
+export type FursPremiseRegistration = v.InferOutput<typeof FursPremiseRegistration>;
+
+export function isFursMovableBusinessPremise(
+  premise: FursPremiseRegistration,
+): premise is FursMovableBusinessPremise {
+  return "premiseType" in premise;
+}
 
 // ── Builders ─────────────────────────────────────────────────────────────────
 
@@ -98,25 +118,22 @@ export function buildInvoiceRequest(
 }
 
 export function buildBusinessPremiseRequest(
-  premise: FursBusinessPremise,
+  premise: FursPremiseRegistration,
   opts: { messageId: string; headerIso: string; validityDateYmd: string },
 ): Record<string, unknown> {
-  const address: Record<string, unknown> = {
-    Street: premise.street,
-    HouseNumber: premise.houseNumber,
-    Community: premise.community,
-    City: premise.city,
-    PostalCode: premise.postalCode,
-  };
-  if (premise.houseNumberAdditional) address.HouseNumberAdditional = premise.houseNumberAdditional;
+  const bpIdentifier: Record<string, unknown> = isFursMovableBusinessPremise(premise)
+    ? { PremiseType: premise.premiseType }
+    : (() => {
+        const address: Record<string, unknown> = {
+          Street: premise.street,
+          HouseNumber: premise.houseNumber,
+          Community: premise.community,
+          City: premise.city,
+          PostalCode: premise.postalCode,
+        };
+        if (premise.houseNumberAdditional) address.HouseNumberAdditional = premise.houseNumberAdditional;
 
-  return {
-    BusinessPremiseRequest: {
-      Header: header(opts.messageId, opts.headerIso),
-      BusinessPremise: {
-        TaxNumber: premise.taxNumber,
-        BusinessPremiseID: premise.premiseId,
-        BPIdentifier: {
+        return {
           RealEstateBP: {
             PropertyID: {
               CadastralNumber: premise.cadastralNumber,
@@ -125,7 +142,16 @@ export function buildBusinessPremiseRequest(
             },
             Address: address,
           },
-        },
+        };
+      })();
+
+  return {
+    BusinessPremiseRequest: {
+      Header: header(opts.messageId, opts.headerIso),
+      BusinessPremise: {
+        TaxNumber: premise.taxNumber,
+        BusinessPremiseID: premise.premiseId,
+        BPIdentifier: bpIdentifier,
         ValidityDate: opts.validityDateYmd,
         SoftwareSupplier: [
           premise.softwareSupplierTaxNumber != null

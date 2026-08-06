@@ -9,7 +9,7 @@ import { decodeJwsPayload, signFursJws, verifyFursResponse } from "./jws";
 import {
   buildBusinessPremiseRequest,
   buildInvoiceRequest,
-  FursBusinessPremise,
+  FursPremiseRegistration,
   FursInvoice,
 } from "./messages";
 import { calculateZoi, zoiToPrintable } from "./zoi";
@@ -61,9 +61,9 @@ export interface InvoiceResult {
 export interface FursClient {
   /** Connectivity check (unsigned, but still over mutual TLS). Returns the echoed text. */
   echo(message?: string): Effect.Effect<string, FursConnectionError>;
-  /** Register an immovable business premise. Resolves `true` on success. */
+  /** Register a business premise. Resolves `true` on success. */
   registerBusinessPremise(
-    premise: FursBusinessPremise,
+    premise: FursPremiseRegistration,
   ): Effect.Effect<true, FursConnectionError | FursError | FursResponseSignatureError | InvalidInvoiceError>;
   /** Fiscally verify an invoice → ZOI + EOR + printable mark. */
   reportInvoice(
@@ -143,7 +143,7 @@ export const makeFursClient = Effect.fn("makeFursClient")(function* (config: Fur
 
   const registerBusinessPremise: FursClient["registerBusinessPremise"] = (premiseInput) =>
     Effect.gen(function* () {
-      const premise = yield* parse(FursBusinessPremise, premiseInput);
+      const premise = yield* parse(FursPremiseRegistration, premiseInput);
       const now = formatFursDateTime(new Date(), timeZone);
       const validity = new Intl.DateTimeFormat("en-CA", {
         timeZone,
