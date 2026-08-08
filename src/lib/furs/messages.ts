@@ -51,6 +51,18 @@ export const FursInvoice = v.object({
   /** VAT breakdown by rate. */
   vat: v.array(FursVat),
   /**
+   * Value of supplies on the invoice that VAT law does not tax, after discount
+   * (spec row R_3.9.7). A multi-purpose gift voucher is the case that forces
+   * this: at issue nobody knows which rate the holder will eventually redeem
+   * at, so the sale carries no VAT, yet the money is taken and must appear in
+   * `invoiceAmount`. Without this field the invoice total and the VAT lines
+   * disagree by the voucher's value and the difference is unexplained.
+   *
+   * Reported inside `TaxesPerSeller`, so it belongs to the same seller as the
+   * VAT breakdown it sits beside. Omit it when the invoice has no such supply.
+   */
+  nontaxableAmount: v.optional(v.number()),
+  /**
    * True when this invoice was issued without an EOR because the connection to
    * the tax authority was down, and is now being submitted after the fact
    * (ZDavPR article 9). Omitted or false for an ordinary live submission.
@@ -153,6 +165,13 @@ export function buildInvoiceRequest(
               TaxableAmount: x.taxableAmount,
               TaxAmount: x.taxAmount,
             })),
+            // XSD sequence inside TaxesPerSeller puts OtherTaxesAmount,
+            // ExemptVATTaxableAmount and ReverseVATTaxableAmount between VAT
+            // and NontaxableAmount. None is emitted, so this follows VAT
+            // directly and the order still reads against the published schema.
+            ...(invoice.nontaxableAmount != null
+              ? { NontaxableAmount: invoice.nontaxableAmount }
+              : {}),
           },
         ],
         ...(invoice.operatorTaxNumber != null ? { OperatorTaxNumber: invoice.operatorTaxNumber } : {}),

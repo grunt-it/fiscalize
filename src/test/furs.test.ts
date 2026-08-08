@@ -197,6 +197,101 @@ describe("buildInvoiceRequest + schema", () => {
     expect(invoice["InvoiceAmount"]).toBe(-66.71);
   });
 
+  /**
+   * Ordering taken from FURS's own published sample (technical documentation
+   * 3.2, the pre-numbered invoice book example): inside TaxesPerSeller the
+   * repeated VAT block comes first, then OtherTaxesAmount,
+   * ExemptVATTaxableAmount, ReverseVATTaxableAmount, NontaxableAmount and
+   * SpecialTaxRulesAmount. Only VAT and NontaxableAmount are emitted here, so
+   * the assertion is that the one we add lands after the block it follows and
+   * not, say, beside TaxRate.
+   */
+  test("reports a nontaxable supply inside TaxesPerSeller, in published order", () => {
+    const msg = buildInvoiceRequest(
+      {
+        taxNumber: 99999862,
+        issueDateTime: new Date("2016-04-10T09:00:00Z"),
+        invoiceNumber: "612",
+        businessPremiseId: "TRGOVINA1",
+        electronicDeviceId: "BLAG1",
+        invoiceAmount: 150.78,
+        vat: [
+          { taxRate: 22, taxableAmount: 36.89, taxAmount: 8.12 },
+          { taxRate: 9.5, taxableAmount: 56.53, taxAmount: 5.37 },
+        ],
+        nontaxableAmount: 43.87,
+      },
+      { zoi: "deadbeef", issueIso: "2016-04-10T09:00:00", messageId: "m1", headerIso: "2016-04-10T09:00:01" },
+    );
+    const seller = invoiceOf(msg)["TaxesPerSeller"];
+    expect(seller).toEqual([
+      {
+        VAT: [
+          { TaxRate: 22, TaxableAmount: 36.89, TaxAmount: 8.12 },
+          { TaxRate: 9.5, TaxableAmount: 56.53, TaxAmount: 5.37 },
+        ],
+        NontaxableAmount: 43.87,
+      },
+    ]);
+    if (!Array.isArray(seller) || typeof seller[0] !== "object" || seller[0] === null) {
+      throw new Error("no TaxesPerSeller");
+    }
+    expect(Object.keys(seller[0])).toEqual(["VAT", "NontaxableAmount"]);
+  });
+
+  /**
+   * The case this field exists for. A multi-purpose gift voucher carries no VAT
+   * at issue because the rate is not knowable yet, but the customer hands over
+   * the money, so the voucher counts toward InvoiceAmount. InvoiceAmount is one
+   * of the six fields the ZOI signs; leaving the voucher out would make the
+   * printed total, the cash taken and the mark disagree. What the voucher must
+   * NOT do is enter a VAT line, hence: total minus taxed gross equals exactly
+   * the nontaxable amount.
+   */
+  test("carries a voucher sold with goods as nontaxable, inside the signed total", () => {
+    const goodsGross = 15.7 + 3.45;
+    const voucher = 20;
+    const msg = buildInvoiceRequest(
+      {
+        taxNumber: 86291661,
+        issueDateTime: new Date("2026-09-01T10:15:00Z"),
+        invoiceNumber: "7",
+        businessPremiseId: "SHOP1",
+        electronicDeviceId: "POS1",
+        invoiceAmount: goodsGross + voucher,
+        vat: [{ taxRate: 22, taxableAmount: 15.7, taxAmount: 3.45 }],
+        nontaxableAmount: voucher,
+      },
+      { zoi: "deadbeef", issueIso: "2026-09-01T12:15:00", messageId: "m1", headerIso: "2026-09-01T12:15:01" },
+    );
+    const invoice = invoiceOf(msg);
+    expect(invoice["InvoiceAmount"]).toBe(39.15);
+    expect(invoice["PaymentAmount"]).toBe(39.15);
+    expect(invoice["TaxesPerSeller"]).toEqual([
+      { VAT: [{ TaxRate: 22, TaxableAmount: 15.7, TaxAmount: 3.45 }], NontaxableAmount: 20 },
+    ]);
+  });
+
+  test("omits NontaxableAmount when the invoice has no untaxed supply", () => {
+    const msg = buildInvoiceRequest(
+      {
+        taxNumber: 10489185,
+        issueDateTime: new Date(),
+        invoiceNumber: "11",
+        businessPremiseId: "BP101",
+        electronicDeviceId: "0001",
+        invoiceAmount: 19.15,
+        vat: [{ taxRate: 22, taxableAmount: 15.7, taxAmount: 3.45 }],
+      },
+      { zoi: "deadbeef", issueIso: "2026-05-25T14:30:00", messageId: "m1", headerIso: "2026-05-25T14:30:01" },
+    );
+    const seller = invoiceOf(msg)["TaxesPerSeller"];
+    if (!Array.isArray(seller) || typeof seller[0] !== "object" || seller[0] === null) {
+      throw new Error("no TaxesPerSeller");
+    }
+    expect("NontaxableAmount" in seller[0]).toBe(false);
+  });
+
   test("omits both new elements entirely for an ordinary invoice", () => {
     // Emitting SubsequentSubmit: false on every live sale would assert something
     // about connectivity that was never checked, so absence must stay absence.
