@@ -100,6 +100,19 @@ describe("signFursJws", () => {
 });
 
 describe("buildInvoiceRequest + schema", () => {
+  /**
+   * The builder returns an untyped record because FURS messages are shaped for
+   * the wire, not for us. Read known keys through one narrowing step rather
+   * than casting at every assertion.
+   */
+  const invoiceOf = (message: Record<string, unknown>): Record<string, unknown> => {
+    const request = message["InvoiceRequest"];
+    if (typeof request !== "object" || request === null) throw new Error("no InvoiceRequest");
+    const invoice = (request as Record<string, unknown>)["Invoice"];
+    if (typeof invoice !== "object" || invoice === null) throw new Error("no Invoice");
+    return invoice as Record<string, unknown>;
+  };
+
   test("maps the FURS invoice envelope with ProtectedID", () => {
     const msg = buildInvoiceRequest(
       {
@@ -112,15 +125,113 @@ describe("buildInvoiceRequest + schema", () => {
         vat: [{ taxRate: 22, taxableAmount: 15.7, taxAmount: 3.45 }],
       },
       { zoi: "deadbeef", issueIso: "2026-05-25T14:30:00", messageId: "m1", headerIso: "2026-05-25T14:30:01" },
-    ) as any;
-    expect(msg.InvoiceRequest.Invoice.ProtectedID).toBe("deadbeef");
-    expect(msg.InvoiceRequest.Invoice.TaxesPerSeller[0].VAT[0].TaxRate).toBe(22);
-    expect(msg.InvoiceRequest.Invoice.NumberingStructure).toBe("B");
+    );
+    const invoice = invoiceOf(msg);
+    expect(invoice["ProtectedID"]).toBe("deadbeef");
+    expect(invoice["NumberingStructure"]).toBe("B");
+    expect(invoice["TaxesPerSeller"]).toEqual([
+      { VAT: [{ TaxRate: 22, TaxableAmount: 15.7, TaxAmount: 3.45 }] },
+    ]);
   });
 
   test("schema rejects an invoice with no VAT lines structurally validated upstream", () => {
     const bad = v.safeParse(FursInvoice, { taxNumber: "nope" });
     expect(bad.success).toBe(false);
+  });
+
+  /**
+   * Shaped after FURS's own published pair, RACUN2.xml and RACUN2STORNO.xml:
+   * invoice 145 at +66.71 on TRGOVINA1/BLAG2, then its storno as 146 at -66.71
+   * on the same premise and device, referencing 145 by identifier and issue
+   * instant. A correction that omits ReferenceInvoice is schema-valid and is
+   * accepted by FURS, so nothing fails; the tax authority simply never learns
+   * the two are related. Hence a test rather than trust.
+   */
+  test("emits ReferenceInvoice for a storno, matching the published example", () => {
+    const msg = buildInvoiceRequest(
+      {
+        taxNumber: 10000658,
+        issueDateTime: new Date("2015-09-07T12:48:39Z"),
+        invoiceNumber: "146",
+        businessPremiseId: "TRGOVINA1",
+        electronicDeviceId: "BLAG2",
+        invoiceAmount: -66.71,
+        paymentAmount: -66.71,
+        operatorTaxNumber: 12345678,
+        vat: [{ taxRate: 22, taxableAmount: -23.14, taxAmount: -5.09 }],
+        referenceInvoice: [
+          {
+            businessPremiseId: "TRGOVINA1",
+            electronicDeviceId: "BLAG2",
+            invoiceNumber: "145",
+            issueDateTime: new Date("2015-09-07T12:12:54Z"),
+          },
+        ],
+      },
+      {
+        zoi: "ca1cb5819841db0ab2af1e2094f68c66",
+        issueIso: "2015-09-07T12:48:39",
+        messageId: "m1",
+        headerIso: "2015-09-07T12:48:39",
+        timeZone: "UTC",
+      },
+    );
+    const invoice = invoiceOf(msg);
+
+    expect(invoice["ReferenceInvoice"]).toEqual([
+      {
+        ReferenceInvoiceIdentifier: {
+          BusinessPremiseID: "TRGOVINA1",
+          ElectronicDeviceID: "BLAG2",
+          InvoiceNumber: "145",
+        },
+        ReferenceInvoiceIssueDateTime: "2015-09-07T12:12:54",
+      },
+    ]);
+    // The storno carries its own number, in the same sequence as its original.
+    expect(invoice["InvoiceIdentifier"]).toEqual({
+      BusinessPremiseID: "TRGOVINA1",
+      ElectronicDeviceID: "BLAG2",
+      InvoiceNumber: "146",
+    });
+    expect(invoice["InvoiceAmount"]).toBe(-66.71);
+  });
+
+  test("omits both new elements entirely for an ordinary invoice", () => {
+    // Emitting SubsequentSubmit: false on every live sale would assert something
+    // about connectivity that was never checked, so absence must stay absence.
+    const msg = buildInvoiceRequest(
+      {
+        taxNumber: 10489185,
+        issueDateTime: new Date(),
+        invoiceNumber: "11",
+        businessPremiseId: "BP101",
+        electronicDeviceId: "0001",
+        invoiceAmount: 19.15,
+        vat: [{ taxRate: 22, taxableAmount: 15.7, taxAmount: 3.45 }],
+      },
+      { zoi: "deadbeef", issueIso: "2026-05-25T14:30:00", messageId: "m1", headerIso: "2026-05-25T14:30:01" },
+    );
+    const invoice = invoiceOf(msg);
+    expect("ReferenceInvoice" in invoice).toBe(false);
+    expect("SubsequentSubmit" in invoice).toBe(false);
+  });
+
+  test("carries SubsequentSubmit when an offline invoice is submitted after the fact", () => {
+    const msg = buildInvoiceRequest(
+      {
+        taxNumber: 10489185,
+        issueDateTime: new Date(),
+        invoiceNumber: "12",
+        businessPremiseId: "BP101",
+        electronicDeviceId: "0001",
+        invoiceAmount: 19.15,
+        subsequentSubmit: true,
+        vat: [{ taxRate: 22, taxableAmount: 15.7, taxAmount: 3.45 }],
+      },
+      { zoi: "deadbeef", issueIso: "2026-05-25T14:30:00", messageId: "m1", headerIso: "2026-05-25T14:30:01" },
+    );
+    expect(invoiceOf(msg)["SubsequentSubmit"]).toBe(true);
   });
 });
 

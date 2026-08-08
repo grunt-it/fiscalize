@@ -183,6 +183,7 @@ export const makeFursClient = Effect.fn("makeFursClient")(function* (config: Fur
         issueIso: issued.iso,
         messageId: randomUUID(),
         headerIso: now.iso,
+        timeZone,
       });
 
       const decoded = yield* postSigned(PATHS.invoice, message);

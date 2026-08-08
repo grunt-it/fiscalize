@@ -1,3 +1,4 @@
+import { formatFursDateTime } from "./datetime";
 import * as v from "valibot";
 
 // ── VAT line within TaxesPerSeller ──────────────────────────────────────────
@@ -13,6 +14,22 @@ export type FursVat = v.InferOutput<typeof FursVat>;
 
 /** Numbering structure: per-device (`B`) or central (`C`). */
 export const NumberingStructure = v.picklist(["B", "C"]);
+
+/**
+ * An invoice this one changes, by identifier and issue instant.
+ *
+ * FURS links a correction to its original by identifier, never by EOR, so a
+ * correction may reference an invoice that has not been confirmed yet. That is
+ * what makes an offline void or refund of an offline sale expressible.
+ */
+export const FursReferenceInvoice = v.object({
+  businessPremiseId: v.pipe(v.string(), v.minLength(1)),
+  electronicDeviceId: v.pipe(v.string(), v.minLength(1)),
+  invoiceNumber: v.pipe(v.string(), v.minLength(1)),
+  /** Issue instant of the referenced invoice, formatted like any other. */
+  issueDateTime: v.date(),
+});
+export type FursReferenceInvoice = v.InferOutput<typeof FursReferenceInvoice>;
 
 // ── Invoice (fiscal verification, cash-register receipt, not the e-invoice) ──
 export const FursInvoice = v.object({
@@ -33,6 +50,20 @@ export const FursInvoice = v.object({
   operatorTaxNumber: v.optional(v.pipe(v.number(), v.integer())),
   /** VAT breakdown by rate. */
   vat: v.array(FursVat),
+  /**
+   * True when this invoice was issued without an EOR because the connection to
+   * the tax authority was down, and is now being submitted after the fact
+   * (ZDavPR article 9). Omitted or false for an ordinary live submission.
+   */
+  subsequentSubmit: v.optional(v.boolean()),
+  /**
+   * Invoices this one changes. Required by ZDavPR article 6 for any subsequent
+   * change to reported invoice data: a storno, credit note or correction MUST
+   * name the invoice it changes, or the tax authority records an unrelated
+   * document. The schema permits up to 1000, so one correction may settle
+   * several originals.
+   */
+  referenceInvoice: v.optional(v.pipe(v.array(FursReferenceInvoice), v.maxLength(1000))),
 });
 export type FursInvoice = v.InferOutput<typeof FursInvoice>;
 
@@ -85,11 +116,25 @@ function header(messageId: string, dateTimeIso: string) {
 
 export function buildInvoiceRequest(
   invoice: FursInvoice,
-  opts: { zoi: string; issueIso: string; messageId: string; headerIso: string },
+  opts: {
+    zoi: string;
+    issueIso: string;
+    messageId: string;
+    headerIso: string;
+    /**
+     * Formats referenced invoices' issue instants. The same zone the caller
+     * used for `issueIso`, so a correction and its original cannot disagree
+     * about wall-clock time.
+     */
+    timeZone?: string;
+  },
 ): Record<string, unknown> {
   return {
     InvoiceRequest: {
       Header: header(opts.messageId, opts.headerIso),
+      // Key order follows the XSD sequence for InvoiceType. The wire format is
+      // JSON so order is not validated, but a reader comparing this against the
+      // published schema should not have to reorder it in their head.
       Invoice: {
         TaxNumber: invoice.taxNumber,
         IssueDateTime: opts.issueIso,
@@ -112,6 +157,22 @@ export function buildInvoiceRequest(
         ],
         ...(invoice.operatorTaxNumber != null ? { OperatorTaxNumber: invoice.operatorTaxNumber } : {}),
         ProtectedID: opts.zoi,
+        ...(invoice.subsequentSubmit != null ? { SubsequentSubmit: invoice.subsequentSubmit } : {}),
+        ...(invoice.referenceInvoice?.length
+          ? {
+              ReferenceInvoice: invoice.referenceInvoice.map((reference) => ({
+                ReferenceInvoiceIdentifier: {
+                  BusinessPremiseID: reference.businessPremiseId,
+                  ElectronicDeviceID: reference.electronicDeviceId,
+                  InvoiceNumber: reference.invoiceNumber,
+                },
+                ReferenceInvoiceIssueDateTime: formatFursDateTime(
+                  reference.issueDateTime,
+                  opts.timeZone,
+                ).iso,
+              })),
+            }
+          : {}),
       },
     },
   };
