@@ -1,6 +1,6 @@
 {
   "name": "@grunt-it/fiscalize",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Private/internal grunt-it Slovenian fiscalization + e-invoicing toolkit (TS/Effect). P1: EN16931 → e-SLOG 2.0 / UBL e-invoice generation + validation, deriving from E-Invoice-EU. Framework-agnostic engine.",
   "type": "module",
   "license": "UNLICENSED",

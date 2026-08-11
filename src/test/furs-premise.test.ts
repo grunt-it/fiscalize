@@ -145,4 +145,35 @@ describe("business premise registration", () => {
     expect(v.safeParse(FursBusinessPremise, immovablePremise).success).toBe(true);
     expect(v.safeParse(FursBusinessPremise, movablePremise).success).toBe(false);
   });
+
+  test("omits SpecialNotes and SoftwareSupplier rather than sending them empty", () => {
+    // FURS validates against a JSON schema with no room for an empty string and
+    // answers S002, "Sporočilo ni v skladu s shemo JSON", naming no field.
+    // Verified against the FURS test environment: the same registration returns
+    // registered once these two members are absent instead of empty.
+    const bare = buildBusinessPremiseRequest(
+      { ...movablePremise, specialNotes: undefined, softwareSupplierTaxNumber: undefined },
+      options,
+    ) as { BusinessPremiseRequest: { BusinessPremise: Record<string, unknown> } };
+    const premise = bare.BusinessPremiseRequest.BusinessPremise;
+    expect(premise).not.toHaveProperty("SpecialNotes");
+    expect(premise).not.toHaveProperty("SoftwareSupplier");
+
+    // Whitespace is not content either.
+    const blank = buildBusinessPremiseRequest(
+      { ...movablePremise, specialNotes: "   ", softwareSupplierTaxNumber: undefined, foreignSoftwareSupplierName: "" },
+      options,
+    ) as { BusinessPremiseRequest: { BusinessPremise: Record<string, unknown> } };
+    expect(blank.BusinessPremiseRequest.BusinessPremise).not.toHaveProperty("SpecialNotes");
+    expect(blank.BusinessPremiseRequest.BusinessPremise).not.toHaveProperty("SoftwareSupplier");
+
+    // A foreign supplier name with content still travels.
+    const foreign = buildBusinessPremiseRequest(
+      { ...movablePremise, softwareSupplierTaxNumber: undefined, foreignSoftwareSupplierName: "Grunt d.o.o." },
+      options,
+    ) as { BusinessPremiseRequest: { BusinessPremise: Record<string, unknown> } };
+    expect(foreign.BusinessPremiseRequest.BusinessPremise.SoftwareSupplier).toEqual([
+      { NameForeign: "Grunt d.o.o." },
+    ]);
+  });
 });

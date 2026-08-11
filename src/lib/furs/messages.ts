@@ -225,6 +225,20 @@ export function buildBusinessPremiseRequest(
         };
       })();
 
+  // FURS validates against a JSON schema that has no room for an empty string.
+  // Sending `SpecialNotes: ""` or `NameForeign: ""` because the taxpayer left an
+  // optional field blank fails the whole registration with S002, "Sporočilo ni v
+  // skladu s shemo JSON", which names no field. Verified against the FURS test
+  // environment: identical requests differ only in these two members, and the
+  // one without empty strings returns registered.
+  const softwareSupplier =
+    premise.softwareSupplierTaxNumber != null
+      ? { TaxNumber: premise.softwareSupplierTaxNumber }
+      : premise.foreignSoftwareSupplierName
+        ? { NameForeign: premise.foreignSoftwareSupplierName }
+        : undefined;
+  const specialNotes = premise.specialNotes?.trim();
+
   return {
     BusinessPremiseRequest: {
       Header: header(opts.messageId, opts.headerIso),
@@ -233,12 +247,8 @@ export function buildBusinessPremiseRequest(
         BusinessPremiseID: premise.premiseId,
         BPIdentifier: bpIdentifier,
         ValidityDate: opts.validityDateYmd,
-        SoftwareSupplier: [
-          premise.softwareSupplierTaxNumber != null
-            ? { TaxNumber: premise.softwareSupplierTaxNumber }
-            : { NameForeign: premise.foreignSoftwareSupplierName ?? "" },
-        ],
-        SpecialNotes: premise.specialNotes ?? "",
+        ...(softwareSupplier ? { SoftwareSupplier: [softwareSupplier] } : {}),
+        ...(specialNotes ? { SpecialNotes: specialNotes } : {}),
       },
     },
   };
