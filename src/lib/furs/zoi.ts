@@ -38,12 +38,18 @@ export function calculateZoi(input: ZoiInput, privateKeyPem: string): string {
 }
 
 /**
- * Build the printable verification string (for the QR / PDF417 / Code128 on the
- * invoice): zero-padded decimal ZOI (39 digits) + `YYMMDDHHmmss` + tax number +
- * a mod-10 control digit over the whole string.
+ * Build the 60-digit printable verification string for the QR/PDF417/Code128
+ * on the invoice. FURS v3.0 section 11 specifies the exact order:
+ * zero-padded decimal ZOI (39) + taxpayer number (8) + `YYMMDDHHmmss` (12) +
+ * a mod-10 control digit over the preceding 59 digits.
  */
 export function zoiToPrintable(zoiHex: string, issueDate: Date, taxNumber: number | string, timeZone?: string): string {
   let value = BigInt(`0x${zoiHex}`).toString(10).padStart(39, "0");
+  const taxNumberText = String(taxNumber);
+  if (!/^\d{8}$/.test(taxNumberText)) {
+    throw new Error("FURS printable payload requires an 8-digit taxpayer number");
+  }
+  value += taxNumberText;
 
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: timeZone ?? "Europe/Ljubljana",
@@ -58,8 +64,6 @@ export function zoiToPrintable(zoiHex: string, issueDate: Date, taxNumber: numbe
   const p = (t: Intl.DateTimeFormatPartTypes) => parts.find((x) => x.type === t)?.value ?? "";
   const hh = p("hour") === "24" ? "00" : p("hour");
   value += `${p("year")}${p("month")}${p("day")}${hh}${p("minute")}${p("second")}`;
-
-  value += String(taxNumber);
 
   let control = 0;
   for (const ch of value) control += Number(ch);
